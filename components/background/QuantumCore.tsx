@@ -147,8 +147,8 @@ export default function QuantumCore({ section }: { section: number }) {
     <div className="fixed inset-0 z-0 flex items-center justify-center pointer-events-none perspective-[1000px]">
       <div
         ref={wrapperRef}
-        className="relative w-[400px] h-[400px] transition-none"
-        style={{ transformStyle: "preserve-3d", willChange: "transform", backfaceVisibility: "hidden" }}
+        className="relative transition-none"
+        style={{ width: "clamp(260px, 80vw, 400px)", height: "clamp(260px, 80vw, 400px)", transformStyle: "preserve-3d", willChange: "transform", backfaceVisibility: "hidden" }}
       >
         <svg
           ref={svgRef}
@@ -172,8 +172,8 @@ export default function QuantumCore({ section }: { section: number }) {
           <div
             className="absolute rounded-full border transition-colors duration-700"
             style={{
-              width: "320px",
-              height: "320px",
+              width: "clamp(180px, 80%, 320px)",
+              height: "clamp(180px, 80%, 320px)",
               borderColor: colorDim,
               borderWidth: "1px",
               borderStyle: section === 2 ? "dashed" : "solid",
@@ -206,8 +206,8 @@ export default function QuantumCore({ section }: { section: number }) {
           <div
             className="absolute rounded-full border transition-colors duration-700"
             style={{
-              width: "240px",
-              height: "240px",
+              width: "clamp(135px, 60%, 240px)",
+              height: "clamp(135px, 60%, 240px)",
               borderColor: color,
               borderWidth: "2px",
               opacity: 0.4,
@@ -246,8 +246,8 @@ export default function QuantumCore({ section }: { section: number }) {
           <div
             className="absolute rounded-full border transition-colors duration-700"
             style={{
-              width: "160px",
-              height: "160px",
+              width: "clamp(90px, 40%, 160px)",
+              height: "clamp(90px, 40%, 160px)",
               borderColor: color,
               borderWidth: "1px",
               opacity: 0.6,
@@ -279,7 +279,7 @@ export default function QuantumCore({ section }: { section: number }) {
           className="absolute inset-0 flex items-center justify-center"
           style={{ zIndex: 10 }}
         >
-          <OrbCore color={color} section={section} size={220} />
+          <OrbCore color={color} section={section} size={Math.min(220, typeof window !== "undefined" ? window.innerWidth * 0.55 : 220)} />
           {section === 1 && state.active_signal_count > 0 && (
             <div
               className="absolute -top-2 -right-2 w-6 h-6 rounded-full flex items-center justify-center text-[9px] font-bold font-mono text-black"
