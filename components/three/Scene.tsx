@@ -3,6 +3,7 @@
 import { Canvas } from "@react-three/fiber";
 import { EffectComposer, Bloom, ChromaticAberration } from "@react-three/postprocessing";
 import { Suspense } from "react";
+import * as THREE from "three";
 import TradingCore from "./TradingCore";
 
 export default function Scene({
@@ -27,7 +28,7 @@ export default function Scene({
               luminanceThreshold={0.2}
               luminanceSmoothing={0.9}
             />
-            <ChromaticAberration offset={[0.001, 0.001]} />
+            <ChromaticAberration offset={new THREE.Vector2(0.001, 0.001)} />
           </EffectComposer>
         </Suspense>
       </Canvas>
