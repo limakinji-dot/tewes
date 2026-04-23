@@ -1,452 +1,419 @@
 "use client";
 
-import { useRef, useEffect, useState } from "react";
+import { useRef, useEffect, useMemo } from "react";
 import { useTrading } from "@/hooks/useTradingContext";
 import gsap from "gsap";
 
+interface Particle {
+  angle: number;
+  radius: number;
+  speed: number;
+  size: number;
+  ring: number;
+  yOffset: number;
+}
+
 export default function QuantumCore({ section }: { section: number }) {
-  const containerRef = useRef<HTMLDivElement>(null);
-  const canvasRef = useRef<HTMLCanvasElement>(null);
-  const { latestTheme } = useTrading();
-  const [activeMode, setActiveMode] = useState(0);
+  const wrapperRef = useRef<HTMLDivElement>(null);
+  const coreRef = useRef<HTMLDivElement>(null);
+  const ring1Ref = useRef<HTMLDivElement>(null);
+  const ring2Ref = useRef<HTMLDivElement>(null);
+  const ring3Ref = useRef<HTMLDivElement>(null);
+  const svgRef = useRef<SVGSVGElement>(null);
+  const particlesRef = useRef<HTMLDivElement[]>([]);
+  const { state, latestTheme } = useTrading();
 
-  const color =
-    latestTheme === "profit" ? "#4ade80" : latestTheme === "loss" ? "#f87171" : "#60a5fa";
-  const colorDim =
-    latestTheme === "profit" ? "rgba(74,222,128,0.15)" : latestTheme === "loss" ? "rgba(248,113,113,0.15)" : "rgba(96,165,250,0.15)";
+  const color = useMemo(() => {
+    return latestTheme === "profit" ? "#4ade80" : latestTheme === "loss" ? "#f87171" : "#60a5fa";
+  }, [latestTheme]);
 
-  // Position & scale morph berdasarkan section
+  const colorDim = useMemo(() => {
+    return latestTheme === "profit" ? "rgba(74,222,128,0.2)" : latestTheme === "loss" ? "rgba(248,113,113,0.2)" : "rgba(96,165,250,0.2)";
+  }, [latestTheme]);
+
+  // Generate persistent particles
+  const particles = useMemo<Particle[]>(() => {
+    const arr: Particle[] = [];
+    for (let i = 0; i < 24; i++) {
+      arr.push({
+        angle: (i / 24) * Math.PI * 2,
+        radius: 70 + Math.random() * 60,
+        speed: 0.002 + Math.random() * 0.004,
+        size: 1.5 + Math.random() * 2.5,
+        ring: i % 3,
+        yOffset: (Math.random() - 0.5) * 40,
+      });
+    }
+    return arr;
+  }, []);
+
+  // Main scroll-driven morph animation
   useEffect(() => {
-    if (!containerRef.current) return;
-    const el = containerRef.current;
+    if (!wrapperRef.current || !coreRef.current) return;
 
-    setActiveMode(section);
+    const tl = gsap.timeline({ defaults: { duration: 1.2, ease: "power3.inOut" } });
 
     switch (section) {
-      case 0:
-        gsap.to(el, { x: 0, scale: 1, opacity: 1, duration: 1, ease: "power3.out" });
+      case 0: // Hero — objek utuh, tenang, besar
+        tl.to(wrapperRef.current, { x: 0, scale: 1, rotateY: 0, rotateX: 0 }, 0)
+          .to(coreRef.current, { scale: 1, opacity: 1 }, 0)
+          .to(ring1Ref.current, { rotateX: 75, rotateZ: 0, scale: 1 }, 0)
+          .to(ring2Ref.current, { rotateX: 45, rotateZ: 30, scale: 1 }, 0)
+          .to(ring3Ref.current, { rotateX: 0, rotateZ: -20, scale: 1 }, 0);
         break;
-      case 1:
-        gsap.to(el, { x: "-18vw", scale: 0.85, opacity: 1, duration: 1, ease: "power3.out" });
+
+      case 1: // Live Logic — objek membelah, cincin terpisah, partikel jadi candle
+        tl.to(wrapperRef.current, { x: "-20vw", scale: 0.9, rotateY: 15 }, 0)
+          .to(coreRef.current, { scale: 0.7, opacity: 0.9 }, 0)
+          .to(ring1Ref.current, { rotateX: 90, rotateZ: 45, scale: 1.3, y: -40 }, 0)
+          .to(ring2Ref.current, { rotateX: 0, rotateZ: 90, scale: 1.1, y: 0 }, 0)
+          .to(ring3Ref.current, { rotateX: 60, rotateZ: -60, scale: 0.9, y: 40 }, 0);
         break;
-      case 2:
-        gsap.to(el, { x: 0, scale: 0.9, opacity: 1, duration: 1, ease: "power3.out" });
+
+      case 2: // History — objek menjadi flat grid, cincin jadi heksagonal
+        tl.to(wrapperRef.current, { x: 0, scale: 0.85, rotateY: 0 }, 0)
+          .to(coreRef.current, { scale: 0.5, opacity: 0.6 }, 0)
+          .to(ring1Ref.current, { rotateX: 0, rotateZ: 0, scale: 1.5, opacity: 0.3 }, 0)
+          .to(ring2Ref.current, { rotateX: 0, rotateZ: 30, scale: 1.2, opacity: 0.5 }, 0)
+          .to(ring3Ref.current, { rotateX: 0, rotateZ: -15, scale: 1, opacity: 0.7 }, 0);
         break;
-      case 3:
-        gsap.to(el, { x: 0, scale: 1.1, opacity: 1, duration: 1.2, ease: "power3.out" });
+
+      case 3: // PnL — objek meledak energi, cincin berputar cepat, inti membesar
+        tl.to(wrapperRef.current, { x: 0, scale: 1.15, rotateY: 0 }, 0)
+          .to(coreRef.current, { scale: 1.3, opacity: 1 }, 0)
+          .to(ring1Ref.current, { rotateX: 80, rotateZ: 180, scale: 1.2 }, 0)
+          .to(ring2Ref.current, { rotateX: 50, rotateZ: -180, scale: 1.1 }, 0)
+          .to(ring3Ref.current, { rotateX: 20, rotateZ: 360, scale: 1 }, 0);
         break;
     }
   }, [section]);
 
-  // Canvas animation for Mode 1 (Pulse/Chart)
+  // Continuous particle animation + constellation lines
   useEffect(() => {
-    if (section !== 1 || !canvasRef.current) return;
-    const canvas = canvasRef.current;
-    const ctx = canvas.getContext("2d");
-    if (!ctx) return;
+    let raf: number;
+    const svg = svgRef.current;
+    if (!svg) return;
 
-    const dpr = window.devicePixelRatio || 1;
-    const size = 320;
-    canvas.width = size * dpr;
-    canvas.height = size * dpr;
-    ctx.scale(dpr, dpr);
+    const animate = (time: number) => {
+      const w = 400;
+      const h = 400;
+      const cx = w / 2;
+      const cy = h / 2;
 
-    let frame = 0;
-    let animId: number;
+      // Update particle positions
+      const positions = particles.map((p, i) => {
+        const t = time * p.speed + p.angle;
+        let r = p.radius;
 
-    const candles: number[] = [];
-    for (let i = 0; i < 20; i++) candles.push(50 + Math.random() * 100);
+        // Section-specific radius morph
+        if (section === 1) r += Math.sin(t * 3) * 20; // Wave breathing
+        if (section === 2) r = 60 + (i % 5) * 25; // Grid snap
+        if (section === 3) r += Math.sin(time * 0.005 + i) * 30; // Explosion pulse
 
-    const draw = () => {
-      ctx.clearRect(0, 0, size, size);
-      frame++;
+        const x = cx + Math.cos(t) * r;
+        const y = cy + Math.sin(t) * r * 0.6 + p.yOffset;
 
-      // Draw circular waveform
-      const cx = size / 2;
-      const cy = size / 2;
-      const radius = 90;
+        // Update DOM particle
+        const el = particlesRef.current[i];
+        if (el) {
+          el.style.transform = `translate(${x - cx}px, ${y - cy}px)`;
+          el.style.opacity = section === 2 && i > 12 ? "0.2" : "0.8";
+        }
 
-      ctx.strokeStyle = colorDim;
-      ctx.lineWidth = 1;
-      ctx.beginPath();
-      for (let i = 0; i <= 360; i += 2) {
-        const rad = (i * Math.PI) / 180;
-        const r = radius + Math.sin(i * 0.1 + frame * 0.03) * 15 + Math.sin(i * 0.05 + frame * 0.02) * 10;
-        const x = cx + Math.cos(rad) * r;
-        const y = cy + Math.sin(rad) * r;
-        i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
-      }
-      ctx.closePath();
-      ctx.stroke();
-
-      // Draw inner candlesticks
-      const candleWidth = 6;
-      const gap = 4;
-      const totalW = candles.length * (candleWidth + gap);
-      const startX = cx - totalW / 2;
-
-      candles.forEach((h, i) => {
-        const x = startX + i * (candleWidth + gap);
-        const isGreen = i % 3 !== 0;
-        const h2 = h + Math.sin(frame * 0.05 + i) * 10;
-
-        ctx.fillStyle = isGreen ? "rgba(74,222,128,0.6)" : "rgba(248,113,113,0.6)";
-        ctx.fillRect(x, cy - h2 / 2, candleWidth, h2);
-
-        // Wick
-        ctx.strokeStyle = isGreen ? "rgba(74,222,128,0.3)" : "rgba(248,113,113,0.3)";
-        ctx.lineWidth = 0.5;
-        ctx.beginPath();
-        ctx.moveTo(x + candleWidth / 2, cy - h2 / 2 - 8);
-        ctx.lineTo(x + candleWidth / 2, cy + h2 / 2 + 8);
-        ctx.stroke();
+        return { x, y, size: p.size };
       });
 
-      // Center orb
-      ctx.beginPath();
-      ctx.arc(cx, cy, 8, 0, Math.PI * 2);
-      ctx.fillStyle = color;
-      ctx.shadowColor = color;
-      ctx.shadowBlur = 20;
-      ctx.fill();
-      ctx.shadowBlur = 0;
+      // Draw constellation lines between nearby particles
+      let pathData = "";
+      for (let i = 0; i < positions.length; i++) {
+        for (let j = i + 1; j < positions.length; j++) {
+          const dx = positions[i].x - positions[j].x;
+          const dy = positions[i].y - positions[j].y;
+          const dist = Math.sqrt(dx * dx + dy * dy);
 
-      animId = requestAnimationFrame(draw);
-    };
-
-    draw();
-    return () => cancelAnimationFrame(animId);
-  }, [section, color, colorDim]);
-
-  // Mode 3 (Nova) canvas - radial gauge
-  useEffect(() => {
-    if (section !== 3 || !canvasRef.current) return;
-    const canvas = canvasRef.current;
-    const ctx = canvas.getContext("2d");
-    if (!ctx) return;
-
-    const dpr = window.devicePixelRatio || 1;
-    const size = 360;
-    canvas.width = size * dpr;
-    canvas.height = size * dpr;
-    ctx.scale(dpr, dpr);
-
-    let frame = 0;
-    let animId: number;
-
-    const draw = () => {
-      ctx.clearRect(0, 0, size, size);
-      frame++;
-      const cx = size / 2;
-      const cy = size / 2;
-
-      // Outer rings
-      for (let r = 100; r <= 140; r += 20) {
-        ctx.strokeStyle = colorDim;
-        ctx.lineWidth = 1;
-        ctx.setLineDash([4, 8]);
-        ctx.beginPath();
-        ctx.arc(cx, cy, r, 0, Math.PI * 2);
-        ctx.stroke();
-        ctx.setLineDash([]);
+          const threshold = section === 3 ? 120 : section === 1 ? 80 : 60;
+          if (dist < threshold) {
+            const opacity = 1 - dist / threshold;
+            pathData += `M${positions[i].x},${positions[i].y} L${positions[j].x},${positions[j].y} `;
+          }
+        }
       }
 
-      // Sweeping arc
-      const sweepAngle = (frame * 0.02) % (Math.PI * 2);
-      ctx.strokeStyle = color;
-      ctx.lineWidth = 3;
-      ctx.lineCap = "round";
-      ctx.beginPath();
-      ctx.arc(cx, cy, 120, sweepAngle, sweepAngle + Math.PI * 0.8);
-      ctx.stroke();
-
-      // Particles burst
-      for (let i = 0; i < 12; i++) {
-        const angle = (frame * 0.01 + (i * Math.PI * 2) / 12);
-        const dist = 80 + Math.sin(frame * 0.03 + i) * 40;
-        const x = cx + Math.cos(angle) * dist;
-        const y = cy + Math.sin(angle) * dist;
-        const r = 2 + Math.sin(frame * 0.05 + i) * 1;
-
-        ctx.beginPath();
-        ctx.arc(x, y, r, 0, Math.PI * 2);
-        ctx.fillStyle = color;
-        ctx.globalAlpha = 0.4 + Math.sin(frame * 0.04 + i) * 0.4;
-        ctx.fill();
+      // Update SVG lines
+      const pathEl = svg.querySelector("path");
+      if (pathEl) {
+        pathEl.setAttribute("d", pathData);
+        pathEl.setAttribute("stroke", colorDim);
+        pathEl.setAttribute("stroke-width", section === 3 ? "1.5" : "0.8");
       }
-      ctx.globalAlpha = 1;
 
-      // Center text
-      ctx.fillStyle = "#fff";
-      ctx.font = "700 14px sans-serif";
-      ctx.textAlign = "center";
-      ctx.textBaseline = "middle";
-      ctx.fillText(latestTheme === "profit" ? "PROFIT" : latestTheme === "loss" ? "LOSS" : "AGENT-X", cx, cy);
-
-      animId = requestAnimationFrame(draw);
+      raf = requestAnimationFrame(animate);
     };
 
-    draw();
-    return () => cancelAnimationFrame(animId);
-  }, [section, color, colorDim, latestTheme]);
+    raf = requestAnimationFrame(animate);
+    return () => cancelAnimationFrame(raf);
+  }, [particles, section, colorDim]);
 
   return (
-    <div className="fixed inset-0 z-0 flex items-center justify-center pointer-events-none">
+    <div className="fixed inset-0 z-0 flex items-center justify-center pointer-events-none perspective-[1000px]">
       <div
-        ref={containerRef}
-        className="relative w-[300px] h-[300px] sm:w-[400px] sm:h-[400px]"
+        ref={wrapperRef}
+        className="relative w-[400px] h-[400px] transition-none"
+        style={{ transformStyle: "preserve-3d" }}
       >
-        {/* ── MODE 0: THE NUCLEUS (Hero) ── */}
-        <div
-          className={`absolute inset-0 transition-all duration-700 ${
-            activeMode === 0 ? "opacity-100 scale-100" : "opacity-0 scale-75"
-          }`}
+        {/* ── SVG Constellation Lines (connecting particles) ── */}
+        <svg
+          ref={svgRef}
+          className="absolute inset-0 w-full h-full pointer-events-none"
+          viewBox="0 0 400 400"
+          style={{ zIndex: 5 }}
         >
-          {/* Outer rotating wireframe rings */}
-          <div className="absolute inset-0 flex items-center justify-center">
-            <div
-              className="absolute w-full h-full rounded-full border border-white/[0.06]"
-              style={{ animation: "spin 20s linear infinite", transformStyle: "preserve-3d" }}
-            />
-            <div
-              className="absolute w-[85%] h-[85%] rounded-full border border-dashed border-white/[0.04]"
-              style={{ animation: "spin 15s linear infinite reverse" }}
-            />
-            <div
-              className="absolute w-[70%] h-[70%] rounded-full border border-white/[0.08]"
-              style={{ animation: "spin 10s linear infinite" }}
-            />
-            {/* Tilted ring */}
-            <div
-              className="absolute w-[90%] h-[90%] rounded-full border border-white/[0.05]"
-              style={{
-                animation: "spin 25s linear infinite",
-                transform: "rotateX(60deg)",
-              }}
-            />
-          </div>
+          <path
+            fill="none"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            opacity={section === 0 ? 0.3 : section === 1 ? 0.5 : section === 2 ? 0.2 : 0.6}
+          />
+        </svg>
 
-          {/* Geometric vertices (dots on ring) */}
-          {[0, 45, 90, 135, 180, 225, 270, 315].map((deg, i) => (
-            <div
-              key={i}
-              className="absolute w-1.5 h-1.5 rounded-full"
-              style={{
-                backgroundColor: color,
-                boxShadow: `0 0 10px ${color}`,
-                top: `${50 + 45 * Math.sin((deg * Math.PI) / 180)}%`,
-                left: `${50 + 45 * Math.cos((deg * Math.PI) / 180)}%`,
-                transform: "translate(-50%, -50%)",
-                animation: `pulse 3s ease-in-out ${i * 0.2}s infinite`,
-              }}
-            />
-          ))}
-
-          {/* Core glow */}
+        {/* ── Ring 3 (Outer) ── */}
+        <div
+          ref={ring3Ref}
+          className="absolute inset-0 flex items-center justify-center"
+          style={{ transformStyle: "preserve-3d" }}
+        >
           <div
-            className="absolute inset-[35%] rounded-full"
+            className="absolute rounded-full border transition-colors duration-700"
             style={{
-              background: `radial-gradient(circle, ${color} 0%, transparent 70%)`,
-              filter: "blur(20px)",
-              opacity: 0.5,
-              animation: "pulse 4s ease-in-out infinite",
+              width: "320px",
+              height: "320px",
+              borderColor: colorDim,
+              borderWidth: "1px",
+              borderStyle: section === 2 ? "dashed" : "solid",
+              boxShadow: `0 0 40px ${colorDim}`,
             }}
           />
-          <div className="absolute inset-[42%] rounded-full bg-[#030303] border border-white/[0.1] flex items-center justify-center">
+          {/* Orbiting nodes on ring 3 */}
+          {[0, 120, 240].map((deg, i) => (
             <div
-              className="w-3 h-3 rounded-full"
+              key={`r3-${i}`}
+              className="absolute w-2 h-2 rounded-full transition-colors duration-700"
               style={{
                 backgroundColor: color,
-                boxShadow: `0 0 30px ${color}, 0 0 60px ${colorDim}`,
-              }}
-            />
-          </div>
-        </div>
-
-        {/* ── MODE 1: THE PULSE (Live Logic) ── */}
-        <div
-          className={`absolute inset-0 transition-all duration-700 ${
-            activeMode === 1 ? "opacity-100 scale-100" : "opacity-0 scale-75"
-          }`}
-        >
-          {/* Equalizer bars around */}
-          <div className="absolute inset-0 flex items-center justify-center">
-            {Array.from({ length: 16 }).map((_, i) => {
-              const angle = (i / 16) * Math.PI * 2;
-              const height = 20 + Math.sin(i * 1.5) * 15;
-              return (
-                <div
-                  key={i}
-                  className="absolute w-[2px] rounded-full"
-                  style={{
-                    height: `${height}px`,
-                    backgroundColor: i % 2 === 0 ? color : "rgba(255,255,255,0.1)",
-                    transform: `rotate(${angle}rad) translateY(-110px)`,
-                    transformOrigin: "center 110px",
-                    animation: `pulse ${2 + Math.random()}s ease-in-out ${i * 0.1}s infinite`,
-                  }}
-                />
-              );
-            })}
-          </div>
-
-          {/* Canvas chart */}
-          <canvas
-            ref={canvasRef}
-            width={320}
-            height={320}
-            className="absolute inset-0 w-full h-full"
-            style={{ opacity: 1 }}
-          />
-
-          {/* Orbiting data packets */}
-          {Array.from({ length: 6 }).map((_, i) => (
-            <div
-              key={i}
-              className="absolute w-1 h-1 rounded-full bg-white/60"
-              style={{
+                boxShadow: `0 0 12px ${color}`,
                 top: "50%",
                 left: "50%",
-                animation: `orbit${i} ${8 + i * 2}s linear infinite`,
+                marginLeft: "-4px",
+                marginTop: "-4px",
+                transform: `rotate(${deg}deg) translateX(160px)`,
+                animation: `orbitRing3 ${10 + i * 2}s linear infinite`,
               }}
             />
           ))}
         </div>
 
-        {/* ── MODE 2: THE VAULT (History) ── */}
+        {/* ── Ring 2 (Middle) ── */}
         <div
-          className={`absolute inset-0 transition-all duration-700 ${
-            activeMode === 2 ? "opacity-100 scale-100" : "opacity-0 scale-75"
-          }`}
+          ref={ring2Ref}
+          className="absolute inset-0 flex items-center justify-center"
+          style={{ transformStyle: "preserve-3d" }}
         >
-          <div className="absolute inset-0 flex items-center justify-center">
-            {/* Hexagonal honeycomb grid */}
-            {[
-              { x: 0, y: 0, s: 1 },
-              { x: -60, y: -35, s: 0.8 },
-              { x: 60, y: -35, s: 0.8 },
-              { x: -60, y: 35, s: 0.8 },
-              { x: 60, y: 35, s: 0.8 },
-              { x: 0, y: -70, s: 0.6 },
-              { x: 0, y: 70, s: 0.6 },
-              { x: -120, y: 0, s: 0.6 },
-              { x: 120, y: 0, s: 0.6 },
-            ].map((h, i) => (
+          <div
+            className="absolute rounded-full border transition-colors duration-700"
+            style={{
+              width: "240px",
+              height: "240px",
+              borderColor: color,
+              borderWidth: "2px",
+              opacity: 0.4,
+              boxShadow: `inset 0 0 30px ${colorDim}`,
+            }}
+          />
+          {/* Data points on ring 2 */}
+          {Array.from({ length: 6 }).map((_, i) => {
+            const angle = (i / 6) * Math.PI * 2;
+            return (
               <div
-                key={i}
-                className="absolute transition-all"
+                key={`r2-${i}`}
+                className="absolute flex flex-col items-center gap-1 transition-opacity duration-500"
                 style={{
-                  width: `${80 * h.s}px`,
-                  height: `${80 * h.s}px`,
-                  transform: `translate(${h.x}px, ${h.y}px)`,
-                  animation: `fadeCell 4s ease-in-out ${i * 0.3}s infinite alternate`,
+                  top: `${50 + 38 * Math.sin(angle)}%`,
+                  left: `${50 + 38 * Math.cos(angle)}%`,
+                  transform: "translate(-50%, -50%)",
+                  opacity: section === 1 ? 1 : 0.3,
                 }}
               >
-                <svg viewBox="0 0 100 100" className="w-full h-full">
-                  <polygon
-                    points="50,5 95,27.5 95,72.5 50,95 5,72.5 5,27.5"
-                    fill="none"
-                    stroke={i === 0 ? color : "rgba(255,255,255,0.08)"}
-                    strokeWidth="1"
-                  />
-                  {i === 0 && (
-                    <polygon
-                      points="50,5 95,27.5 95,72.5 50,95 5,72.5 5,27.5"
-                      fill={colorDim}
-                    />
-                  )}
-                </svg>
-                {i > 0 && (
-                  <div className="absolute inset-0 flex items-center justify-center">
-                    <span className="text-[8px] font-mono text-white/20">
-                      {["TP", "SL", "LONG", "SHORT", "VOID", "EMA", "RSI", "SAR"][i % 8]}
-                    </span>
-                  </div>
+                <div className="w-1 h-1 rounded-full bg-white/60" />
+                {section === 1 && (
+                  <span className="text-[7px] font-mono text-white/40 whitespace-nowrap">
+                    {["5m", "15m", "30m", "1h", "4h", "AI"][i]}
+                  </span>
                 )}
               </div>
-            ))}
-          </div>
+            );
+          })}
+        </div>
 
-          {/* Data stream lines */}
-          <div className="absolute inset-0 overflow-hidden rounded-full opacity-20">
-            {[0, 1, 2, 3].map((i) => (
+        {/* ── Ring 1 (Inner) ── */}
+        <div
+          ref={ring1Ref}
+          className="absolute inset-0 flex items-center justify-center"
+          style={{ transformStyle: "preserve-3d" }}
+        >
+          <div
+            className="absolute rounded-full border transition-colors duration-700"
+            style={{
+              width: "160px",
+              height: "160px",
+              borderColor: color,
+              borderWidth: "1px",
+              opacity: 0.6,
+            }}
+          />
+          {/* Rotating inner markers */}
+          <div
+            className="absolute w-full h-full animate-[spin_8s_linear_infinite]"
+            style={{ animationDirection: section === 3 ? "reverse" : "normal", animationDuration: section === 3 ? "3s" : "8s" }}
+          >
+            {[0, 90, 180, 270].map((deg) => (
               <div
-                key={i}
-                className="absolute h-[1px] w-full bg-gradient-to-r from-transparent via-white/30 to-transparent"
+                key={`r1-${deg}`}
+                className="absolute w-1.5 h-1.5 rounded-full transition-colors duration-700"
                 style={{
-                  top: `${25 + i * 16}%`,
-                  animation: `stream 3s linear ${i * 0.7}s infinite`,
+                  backgroundColor: color,
+                  top: `${50 + 50 * Math.sin((deg * Math.PI) / 180)}%`,
+                  left: `${50 + 50 * Math.cos((deg * Math.PI) / 180)}%`,
+                  transform: "translate(-50%, -50%)",
                 }}
               />
             ))}
           </div>
         </div>
 
-        {/* ── MODE 3: THE NOVA (PnL) ── */}
+        {/* ── Central Core (Nucleus) ── */}
         <div
-          className={`absolute inset-0 transition-all duration-700 ${
-            activeMode === 3 ? "opacity-100 scale-100" : "opacity-0 scale-75"
-          }`}
+          ref={coreRef}
+          className="absolute inset-0 flex items-center justify-center"
+          style={{ zIndex: 10 }}
         >
-          <canvas
-            ref={canvasRef}
-            width={360}
-            height={360}
-            className="absolute inset-0 w-full h-full"
+          {/* Glow aura */}
+          <div
+            className="absolute w-24 h-24 rounded-full transition-colors duration-700"
+            style={{
+              background: `radial-gradient(circle, ${color} 0%, transparent 70%)`,
+              filter: "blur(25px)",
+              opacity: 0.5,
+              animation: "pulse 3s ease-in-out infinite",
+            }}
           />
-          {/* Decorative corner brackets */}
-          {[
-            { t: 0, l: 0, r: "border-r-0 border-b-0" },
-            { t: 0, r: 0, l: "border-l-0 border-b-0" },
-            { b: 0, l: 0, r: "border-r-0 border-t-0" },
-            { b: 0, r: 0, l: "border-l-0 border-t-0" },
-          ].map((pos, i) => (
+          {/* Core sphere */}
+          <div
+            className="relative w-12 h-12 rounded-full flex items-center justify-center transition-all duration-700"
+            style={{
+              background: `radial-gradient(circle at 30% 30%, ${color}, #030303)`,
+              boxShadow: `0 0 40px ${colorDim}, inset 0 0 20px ${colorDim}`,
+              border: `1px solid ${colorDim}`,
+            }}
+          >
             <div
-              key={i}
-              className={`absolute w-8 h-8 border-2 ${pos.r || pos.l} border-white/10`}
+              className="w-3 h-3 rounded-full transition-colors duration-700"
               style={{
-                top: pos.t !== undefined ? "15%" : undefined,
-                bottom: pos.b !== undefined ? "15%" : undefined,
-                left: pos.l !== undefined ? "15%" : undefined,
-                right: pos.r !== undefined ? "15%" : undefined,
+                backgroundColor: color,
+                boxShadow: `0 0 20px ${color}`,
               }}
             />
-          ))}
+          </div>
+          {/* Active signal count badge (only in section 1) */}
+          {section === 1 && state.active_signal_count > 0 && (
+            <div
+              className="absolute -top-2 -right-2 w-6 h-6 rounded-full flex items-center justify-center text-[9px] font-bold font-mono text-black"
+              style={{ backgroundColor: color }}
+            >
+              {state.active_signal_count}
+            </div>
+          )}
         </div>
+
+        {/* ── Floating Particles (constellation nodes) ── */}
+        {particles.map((p, i) => (
+          <div
+            key={`p-${i}`}
+            ref={(el) => {
+              if (el) particlesRef.current[i] = el;
+            }}
+            className="absolute top-1/2 left-1/2 w-1 h-1 rounded-full transition-colors duration-700 pointer-events-none"
+            style={{
+              backgroundColor: i % 4 === 0 ? color : "rgba(255,255,255,0.5)",
+              boxShadow: i % 4 === 0 ? `0 0 8px ${color}` : "none",
+              marginLeft: "-2px",
+              marginTop: "-2px",
+              width: `${p.size}px`,
+              height: `${p.size}px`,
+            }}
+          />
+        ))}
+
+        {/* ── Section-specific overlays ── */}
+        {/* Live Logic: mini candlesticks floating */}
+        {section === 1 && (
+          <div className="absolute inset-0 pointer-events-none">
+            {Array.from({ length: 5 }).map((_, i) => (
+              <div
+                key={`candle-${i}`}
+                className="absolute w-[2px] rounded-full transition-colors duration-700"
+                style={{
+                  height: `${15 + Math.random() * 20}px`,
+                  backgroundColor: i % 2 === 0 ? "rgba(74,222,128,0.4)" : "rgba(248,113,113,0.4)",
+                  top: `${20 + i * 15}%`,
+                  left: `${10 + i * 20}%`,
+                  animation: `float ${3 + i}s ease-in-out ${i * 0.5}s infinite alternate`,
+                }}
+              />
+            ))}
+          </div>
+        )}
+
+        {/* History: hex grid overlay */}
+        {section === 2 && (
+          <div className="absolute inset-0 flex items-center justify-center pointer-events-none opacity-30">
+            <svg width="200" height="200" viewBox="0 0 200 200" className="animate-[spin_60s_linear_infinite]">
+              <defs>
+                <pattern id="hex" width="28" height="48" patternUnits="userSpaceOnUse">
+                  <path d="M14 0 L28 8 L28 24 L14 32 L0 24 L0 8 Z" fill="none" stroke={colorDim} strokeWidth="0.5" />
+                </pattern>
+              </defs>
+              <rect width="200" height="200" fill="url(#hex)" />
+            </svg>
+          </div>
+        )}
+
+        {/* PnL: radial burst lines */}
+        {section === 3 && (
+          <div className="absolute inset-0 pointer-events-none">
+            {Array.from({ length: 8 }).map((_, i) => {
+              const angle = (i / 8) * Math.PI * 2;
+              return (
+                <div
+                  key={`burst-${i}`}
+                  className="absolute top-1/2 left-1/2 h-[1px] origin-left transition-colors duration-700"
+                  style={{
+                    width: "180px",
+                    background: `linear-gradient(90deg, ${color}, transparent)`,
+                    transform: `rotate(${angle}rad)`,
+                    opacity: 0.3,
+                    animation: `pulse 2s ease-in-out ${i * 0.25}s infinite`,
+                  }}
+                />
+              );
+            })}
+          </div>
+        )}
       </div>
 
       <style jsx>{`
-        @keyframes orbit0 {
-          from { transform: rotate(0deg) translateX(100px) rotate(0deg); }
-          to { transform: rotate(360deg) translateX(100px) rotate(-360deg); }
-        }
-        @keyframes orbit1 {
-          from { transform: rotate(60deg) translateX(120px) rotate(-60deg); }
-          to { transform: rotate(420deg) translateX(120px) rotate(-420deg); }
-        }
-        @keyframes orbit2 {
-          from { transform: rotate(120deg) translateX(90px) rotate(-120deg); }
-          to { transform: rotate(480deg) translateX(90px) rotate(-480deg); }
-        }
-        @keyframes orbit3 {
-          from { transform: rotate(180deg) translateX(110px) rotate(-180deg); }
-          to { transform: rotate(540deg) translateX(110px) rotate(-540deg); }
-        }
-        @keyframes orbit4 {
-          from { transform: rotate(240deg) translateX(130px) rotate(-240deg); }
-          to { transform: rotate(600deg) translateX(130px) rotate(-600deg); }
-        }
-        @keyframes orbit5 {
-          from { transform: rotate(300deg) translateX(95px) rotate(-300deg); }
-          to { transform: rotate(660deg) translateX(95px) rotate(-660deg); }
-        }
-        @keyframes fadeCell {
-          0% { opacity: 0.3; transform: translate(var(--tw-translate-x), var(--tw-translate-y)) scale(0.95); }
-          100% { opacity: 1; transform: translate(var(--tw-translate-x), var(--tw-translate-y)) scale(1.05); }
-        }
-        @keyframes stream {
-          0% { transform: translateX(-100%); }
-          100% { transform: translateX(100%); }
+        @keyframes orbitRing3 {
+          from { transform: rotate(0deg) translateX(160px) rotate(0deg); }
+          to { transform: rotate(360deg) translateX(160px) rotate(-360deg); }
         }
       `}</style>
     </div>
