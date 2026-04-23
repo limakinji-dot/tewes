@@ -87,7 +87,7 @@ export default function Preloader({ onComplete }: { onComplete: () => void }) {
           <span style={{ color: "#d4a847" }}>-X</span>
         </div>
         <div ref={subtitleRef} className="text-[10px] font-mono text-white/30 tracking-[0.4em]" style={{ opacity: 0 }}>
-          QUANTUM EXECUTION SYSTEM
+          REALSONNET
         </div>
       </div>
 
@@ -105,7 +105,7 @@ export default function Preloader({ onComplete }: { onComplete: () => void }) {
           style={{
             background: "linear-gradient(90deg, rgba(212,168,71,0.8), #d4a847)",
             transformOrigin: "left center",
-            scaleX: 0,
+            transform: "scaleX(0)",
           }}
         />
       </div>
