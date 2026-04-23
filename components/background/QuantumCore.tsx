@@ -139,7 +139,7 @@ export default function QuantumCore({ section }: { section: number }) {
     };
 
     raf = requestAnimationFrame(animate);
-    return () => cancelAnimationFrame(af);
+    return () => cancelAnimationFrame(raf);
   }, [particles, section, colorDim]);
 
   return (
