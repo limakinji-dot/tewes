@@ -31,6 +31,7 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 
+/* Glassmorphism utilities */
 .glass {
   background: rgba(255, 255, 255, 0.03);
   backdrop-filter: blur(20px) saturate(180%);
@@ -46,6 +47,7 @@ body {
   border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
+/* Metallic grid texture */
 .metallic-grid {
   background-image: 
     linear-gradient(rgba(255,255,255,0.04) 1px, transparent 1px),
@@ -62,6 +64,7 @@ body {
   pointer-events: none;
 }
 
+/* Scrollbar */
 ::-webkit-scrollbar {
   width: 6px;
 }
@@ -76,7 +79,27 @@ body {
   background: #555;
 }
 
+/* KaTeX overrides */
 .katex {
   font-size: 1em;
   color: inherit;
+}
+
+/* ── Aurora Animations ── */
+@keyframes blob {
+  0%   { transform: translate(0, 0) scale(1); }
+  33%  { transform: translate(30px, -40px) scale(1.1); }
+  66%  { transform: translate(-20px, 20px) scale(0.9); }
+  100% { transform: translate(0, 0) scale(1); }
+}
+
+@keyframes float {
+  0%   { transform: translate(-50%, -50%) translateY(0px); opacity: 0.3; }
+  100% { transform: translate(-50%, -50%) translateY(-15px); opacity: 0.9; }
+}
+
+/* Spin for conic gradient */
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
 }
