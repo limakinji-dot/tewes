@@ -31,7 +31,6 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 
-/* Glassmorphism utilities */
 .glass {
   background: rgba(255, 255, 255, 0.03);
   backdrop-filter: blur(20px) saturate(180%);
@@ -47,7 +46,6 @@ body {
   border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
-/* Metallic grid texture */
 .metallic-grid {
   background-image: 
     linear-gradient(rgba(255,255,255,0.04) 1px, transparent 1px),
@@ -64,7 +62,6 @@ body {
   pointer-events: none;
 }
 
-/* Scrollbar */
 ::-webkit-scrollbar {
   width: 6px;
 }
@@ -79,13 +76,11 @@ body {
   background: #555;
 }
 
-/* KaTeX overrides */
 .katex {
   font-size: 1em;
   color: inherit;
 }
 
-/* ── Aurora Animations ── */
 @keyframes blob {
   0%   { transform: translate(0, 0) scale(1); }
   33%  { transform: translate(30px, -40px) scale(1.1); }
@@ -98,7 +93,6 @@ body {
   100% { transform: translate(-50%, -50%) translateY(-15px); opacity: 0.9; }
 }
 
-/* ── Quantum Core Animations ── */
 @keyframes spin {
   from { transform: rotate(0deg); }
   to   { transform: rotate(360deg); }
@@ -117,4 +111,36 @@ body {
 @keyframes fadeCell {
   0%   { opacity: 0.3; transform: scale(0.95); }
   100% { opacity: 1; transform: scale(1.05); }
+}
+
+/* ── Lenis Smooth Scroll ── */
+html.lenis,
+html.lenis body {
+  height: auto;
+}
+
+.lenis.lenis-smooth {
+  scroll-behavior: auto !important;
+}
+
+.lenis.lenis-smooth [data-lenis-prevent] {
+  overscroll-behavior: contain;
+}
+
+.lenis.lenis-stopped {
+  overflow: hidden;
+}
+
+/* ── GPU Performance ── */
+.glass,
+.glass-strong,
+.story-section,
+[class*="animate-"] {
+  will-change: transform;
+  backface-visibility: hidden;
+  transform: translateZ(0);
+}
+
+.fixed {
+  contain: layout style paint;
 }
