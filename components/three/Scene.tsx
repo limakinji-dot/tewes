@@ -1,10 +1,10 @@
 "use client";
 
-import { Canvas } from "@react-three/fiber";
-import { EffectComposer, Bloom, ChromaticAberration } from "@react-three/postprocessing";
-import { Suspense } from "react";
-import * as THREE from "three";
-import TradingCore from "./TradingCore";
+// Scene.tsx is intentionally stubbed.
+// The 3D visual layer is handled by QuantumCore (CSS/DOM).
+// To restore the Three.js canvas, install:
+//   npm install three @react-three/fiber @react-three/postprocessing @react-three/drei
+// and revert this file to the original Scene.tsx.
 
 export default function Scene({
   scrollProgress,
@@ -13,29 +13,5 @@ export default function Scene({
   scrollProgress: number;
   section: number;
 }) {
-  return (
-    <div className="fixed inset-0 z-0 pointer-events-none">
-      <Canvas
-        camera={{ position: [0, 0, 6], fov: 45 }}
-        dpr={[1, 2]}
-        gl={{ antialias: true, alpha: true }}
-      >
-        <Suspense fallback={null}>
-          <TradingCore scrollProgress={scrollProgress} section={section} />
-          <EffectComposer>
-            <Bloom
-              intensity={1.2}
-              luminanceThreshold={0.2}
-              luminanceSmoothing={0.9}
-            />
-            <ChromaticAberration
-              offset={new THREE.Vector2(0.001, 0.001)}
-              radialModulation={false}
-              modulationOffset={0.5}
-            />
-          </EffectComposer>
-        </Suspense>
-      </Canvas>
-    </div>
-  );
+  return null;
 }
