@@ -2,7 +2,7 @@
 
 import { motion, AnimatePresence } from "framer-motion";
 import { useTrading } from "@/hooks/useTradingContext";
-import { formatPrice, formatTime } from "@/lib/utils";
+import { formatPrice, formatTime, cn } from "@/lib/utils";
 import { useEffect, useState } from "react";
 
 export default function SignalFeed() {
@@ -21,13 +21,13 @@ export default function SignalFeed() {
 
   return (
     <div className="space-y-3">
-      <div className="flex items-center justify-between mb-4">
-        <h3 className="text-xs font-mono tracking-[0.2em] text-white/50 uppercase">
+      <div className="flex items-center justify-between mb-6">
+        <h3 className="text-[10px] font-mono tracking-[0.25em] text-white/40 uppercase">
           Live Signals
         </h3>
         <div className="flex items-center gap-2">
-          <span className="w-2 h-2 rounded-full bg-accent-profit animate-pulse" />
-          <span className="text-[10px] font-mono text-white/40">
+          <span className="w-1.5 h-1.5 rounded-full bg-[#4ade80] animate-pulse" />
+          <span className="text-[10px] font-mono text-white/30">
             {state.active_signal_count}/{state.max_active_signals} ACTIVE
           </span>
         </div>
@@ -51,52 +51,56 @@ export default function SignalFeed() {
             exit={{ opacity: 0, x: -50, scale: 0.95 }}
             transition={{ type: "spring", damping: 25, stiffness: 300 }}
             className={cn(
-              "glass rounded-xl p-4 border-l-2 transition-colors",
+              "glass shimmer-card rounded-xl p-4 border-l-2 transition-all duration-300",
+              "hover:border-white/20 hover:bg-white/[0.05]",
               sig.decision === "LONG"
-                ? "border-l-accent-profit"
-                : "border-l-accent-loss"
+                ? "border-l-[#4ade80]"
+                : "border-l-[#f87171]"
             )}
           >
-            <div className="flex items-center justify-between mb-2">
+            <div className="flex items-center justify-between mb-3">
               <div className="flex items-center gap-3">
-                <span className="text-sm font-bold font-mono text-white">
+                <span className="text-sm font-bold font-mono text-white tracking-wider">
                   {sig.symbol.replace("_USDT", "")}
                 </span>
                 <span
                   className={cn(
-                    "text-[10px] font-bold px-2 py-0.5 rounded-full",
+                    "text-[9px] font-bold px-2.5 py-0.5 rounded-full tracking-widest",
                     sig.decision === "LONG"
-                      ? "bg-accent-profit/10 text-accent-profit"
-                      : "bg-accent-loss/10 text-accent-loss"
+                      ? "bg-[#4ade80]/10 text-[#4ade80] border border-[#4ade80]/20"
+                      : "bg-[#f87171]/10 text-[#f87171] border border-[#f87171]/20"
                   )}
                 >
                   {sig.decision}
                 </span>
               </div>
-              <span className="text-[10px] font-mono text-white/30">
+              <span className="text-[10px] font-mono text-white/25">
                 {formatTime(sig.timestamp)}
               </span>
             </div>
 
             <div className="grid grid-cols-3 gap-2 text-[11px] font-mono">
               <div>
-                <div className="text-white/30 mb-0.5">ENTRY</div>
-                <div className="text-white/80">${formatPrice(sig.entry)}</div>
+                <div className="text-white/25 mb-1 text-[9px] tracking-widest">ENTRY</div>
+                <div className="text-white/70">${formatPrice(sig.entry)}</div>
               </div>
               <div>
-                <div className="text-white/30 mb-0.5">TP</div>
-                <div className="text-accent-profit">${formatPrice(sig.tp)}</div>
+                <div className="text-white/25 mb-1 text-[9px] tracking-widest">TP</div>
+                <div className="text-[#4ade80]">${formatPrice(sig.tp)}</div>
               </div>
               <div>
-                <div className="text-white/30 mb-0.5">SL</div>
-                <div className="text-accent-loss">${formatPrice(sig.sl)}</div>
+                <div className="text-white/25 mb-1 text-[9px] tracking-widest">SL</div>
+                <div className="text-[#f87171]">${formatPrice(sig.sl)}</div>
               </div>
             </div>
 
             {sig.entry_hit && (
-              <div className="mt-2 pt-2 border-t border-white/5 flex items-center justify-between">
-                <span className="text-[10px] text-white/40">Live</span>
-                <span className="text-xs font-mono text-white/80">
+              <div className="mt-3 pt-3 border-t border-white/[0.04] flex items-center justify-between">
+                <div className="flex items-center gap-1.5">
+                  <span className="w-1 h-1 rounded-full bg-[#4ade80] animate-pulse" />
+                  <span className="text-[9px] text-white/30 font-mono tracking-widest">LIVE</span>
+                </div>
+                <span className="text-xs font-mono text-white/70">
                   ${formatPrice(sig.current_price)}
                 </span>
               </div>
@@ -106,9 +110,9 @@ export default function SignalFeed() {
       </AnimatePresence>
 
       {openSignals.length === 0 && (
-        <div className="glass rounded-xl p-8 text-center">
-          <div className="text-white/20 text-xs font-mono">NO ACTIVE SIGNALS</div>
-          <div className="text-white/10 text-[10px] font-mono mt-1">
+        <div className="glass rounded-xl p-10 text-center">
+          <div className="text-white/15 text-xs font-mono tracking-widest">NO ACTIVE SIGNALS</div>
+          <div className="text-white/10 text-[10px] font-mono mt-2 tracking-wide">
             Waiting for AI analysis...
           </div>
         </div>
@@ -116,5 +120,3 @@ export default function SignalFeed() {
     </div>
   );
 }
-
-import { cn } from "@/lib/utils";
