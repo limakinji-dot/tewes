@@ -38,55 +38,128 @@ export default function PnLShowcaseSection() {
 
   const latestPnl = state.total_pnl_pct;
   const isProfit = latestPnl >= 0;
+  const isHighWinRate = state.winrate >= 60;
 
   return (
     <section
       ref={sectionRef}
-      className="relative min-h-screen flex items-center justify-center z-10 px-4 py-24"
+      className="relative min-h-screen flex items-center justify-center z-10 px-4"
+      style={{ paddingTop: "8rem", paddingBottom: "8rem" }}
     >
-      <div className="max-w-6xl mx-auto w-full grid lg:grid-cols-2 gap-12 items-center">
+      <div className="max-w-6xl mx-auto w-full grid lg:grid-cols-2 gap-16 items-center">
         <div>
           <motion.div
             initial={{ opacity: 0, y: 30 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            className="mb-8"
+            className="mb-12"
           >
+            <div className="text-[9px] font-mono text-white/25 tracking-[0.4em] uppercase mb-6">
+              Performance Report
+            </div>
             <h2
-              className="text-5xl sm:text-7xl font-bold tracking-tighter mb-4"
+              className="font-display text-6xl sm:text-8xl font-black italic tracking-tighter mb-3 leading-none"
               style={{
                 color: isProfit ? "#4ade80" : "#f87171",
-                textShadow: `0 0 60px ${isProfit ? "rgba(74,222,128,0.3)" : "rgba(248,113,113,0.3)"}`,
+                textShadow: `0 0 80px ${isProfit ? "rgba(74,222,128,0.25)" : "rgba(248,113,113,0.25)"}`,
               }}
             >
               {isProfit ? "+" : ""}
               {latestPnl.toFixed(2)}%
             </h2>
-            <p className="text-xs font-mono text-white/30 tracking-widest">
+            <p className="text-[10px] font-mono text-white/25 tracking-[0.3em]">
               TOTAL PORTFOLIO RETURN
             </p>
           </motion.div>
 
-          <GlassCard className="mb-6">
-            <div className="grid grid-cols-2 gap-4 text-center">
-              <div>
-                <div className="text-2xl font-bold text-white mb-1">{state.winrate}%</div>
-                <div className="text-[10px] font-mono text-white/30">WIN RATE</div>
+          {/* Stats grid */}
+          <div className="grid grid-cols-2 gap-4 mb-6">
+            {/* Win Rate — gold if high */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ delay: 0.1 }}
+              className={`shimmer-card rounded-2xl p-6 text-center ${isHighWinRate ? "shimmer-gold glass-gold" : "glass"}`}
+              style={isHighWinRate ? { animation: "gold-pulse 3s ease-in-out infinite" } : {}}
+            >
+              <div
+                className="text-3xl font-bold font-mono mb-1"
+                style={{ color: isHighWinRate ? "#d4a847" : "#ffffff" }}
+              >
+                {state.winrate}%
               </div>
-              <div>
-                <div className="text-2xl font-bold text-white mb-1">{state.trade_count}</div>
-                <div className="text-[10px] font-mono text-white/30">TOTAL TRADES</div>
+              <div
+                className="text-[9px] font-mono tracking-widest"
+                style={{ color: isHighWinRate ? "rgba(212,168,71,0.6)" : "rgba(255,255,255,0.3)" }}
+              >
+                WIN RATE
               </div>
-              <div>
-                <div className="text-2xl font-bold text-accent-profit mb-1">{state.win_count}</div>
-                <div className="text-[10px] font-mono text-white/30">WINS</div>
+              {isHighWinRate && (
+                <div className="text-[8px] font-mono mt-1" style={{ color: "rgba(212,168,71,0.5)" }}>
+                  ◆ ELITE
+                </div>
+              )}
+            </motion.div>
+
+            {/* Total trades */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ delay: 0.15 }}
+              className="glass shimmer-card rounded-2xl p-6 text-center"
+            >
+              <div className="text-3xl font-bold font-mono text-white mb-1">{state.trade_count}</div>
+              <div className="text-[9px] font-mono text-white/30 tracking-widest">TOTAL TRADES</div>
+            </motion.div>
+
+            {/* Wins */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ delay: 0.2 }}
+              className="glass shimmer-card rounded-2xl p-6 text-center"
+            >
+              <div className="text-3xl font-bold font-mono mb-1" style={{ color: "#4ade80" }}>
+                {state.win_count}
               </div>
-              <div>
-                <div className="text-2xl font-bold text-accent-loss mb-1">{state.loss_count}</div>
-                <div className="text-[10px] font-mono text-white/30">LOSSES</div>
+              <div className="text-[9px] font-mono text-white/30 tracking-widest">WINS</div>
+            </motion.div>
+
+            {/* Losses */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ delay: 0.25 }}
+              className="glass shimmer-card rounded-2xl p-6 text-center"
+            >
+              <div className="text-3xl font-bold font-mono mb-1" style={{ color: "#f87171" }}>
+                {state.loss_count}
               </div>
-            </div>
-          </GlassCard>
+              <div className="text-[9px] font-mono text-white/30 tracking-widest">LOSSES</div>
+            </motion.div>
+          </div>
+
+          {/* Total PnL USDT — gold accent */}
+          {state.total_pnl_usdt !== 0 && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              whileInView={{ opacity: 1 }}
+              viewport={{ once: true }}
+              transition={{ delay: 0.3 }}
+              className="glass-gold shimmer-card shimmer-gold rounded-2xl p-5 flex items-center justify-between"
+            >
+              <div className="text-[9px] font-mono tracking-widest" style={{ color: "rgba(212,168,71,0.6)" }}>
+                TOTAL PROFIT (USDT)
+              </div>
+              <div className="text-xl font-bold font-mono" style={{ color: "#d4a847" }}>
+                ${state.total_pnl_usdt.toFixed(2)}
+              </div>
+            </motion.div>
+          )}
         </div>
 
         <div className="flex justify-center">
