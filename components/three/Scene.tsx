@@ -28,7 +28,11 @@ export default function Scene({
               luminanceThreshold={0.2}
               luminanceSmoothing={0.9}
             />
-            <ChromaticAberration offset={new THREE.Vector2(0.001, 0.001)} />
+            <ChromaticAberration
+              offset={new THREE.Vector2(0.001, 0.001)}
+              radialModulation={false}
+              modulationOffset={0.5}
+            />
           </EffectComposer>
         </Suspense>
       </Canvas>
