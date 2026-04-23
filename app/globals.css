@@ -98,8 +98,23 @@ body {
   100% { transform: translate(-50%, -50%) translateY(-15px); opacity: 0.9; }
 }
 
-/* Spin for conic gradient */
+/* ── Quantum Core Animations ── */
 @keyframes spin {
   from { transform: rotate(0deg); }
   to   { transform: rotate(360deg); }
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 0.4; transform: scale(1); }
+  50%      { opacity: 1; transform: scale(1.2); }
+}
+
+@keyframes stream {
+  0%   { transform: translateX(-100%); }
+  100% { transform: translateX(100%); }
+}
+
+@keyframes fadeCell {
+  0%   { opacity: 0.3; transform: scale(0.95); }
+  100% { opacity: 1; transform: scale(1.05); }
 }
