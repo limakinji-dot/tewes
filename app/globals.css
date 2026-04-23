@@ -27,7 +27,6 @@
 html {
   scroll-behavior: auto;
   background: #030303;
-  cursor: none;
 }
 
 body {
@@ -35,11 +34,13 @@ body {
   color: #e5e5e5;
   overflow-x: hidden;
   -webkit-font-smoothing: antialiased;
-  cursor: none;
 }
 
-a, button, [role="button"] {
-  cursor: none;
+/* Custom cursor only on real pointer devices */
+@media (pointer: fine) {
+  html { cursor: none; }
+  body { cursor: none; }
+  a, button, [role="button"] { cursor: none; }
 }
 
 .font-display {
