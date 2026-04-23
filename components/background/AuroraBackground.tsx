@@ -1,7 +1,9 @@
 export default function AuroraBackground() {
   return (
-    <div className="fixed inset-0 -z-10 bg-[#030303] overflow-hidden pointer-events-none">
-      {/* Violet blob */}
+    <div
+      className="fixed inset-0 -z-10 bg-[#030303] overflow-hidden pointer-events-none"
+      style={{ willChange: "transform", transform: "translateZ(0)" }}
+    >
       <div
         className="absolute -top-[20%] -left-[10%] w-[70vw] h-[70vw] rounded-full mix-blend-screen"
         style={{
@@ -11,7 +13,6 @@ export default function AuroraBackground() {
           animation: "blob 18s infinite alternate",
         }}
       />
-      {/* Deep blue blob */}
       <div
         className="absolute top-[30%] -right-[10%] w-[60vw] h-[60vw] rounded-full mix-blend-screen"
         style={{
@@ -21,7 +22,6 @@ export default function AuroraBackground() {
           animation: "blob 22s infinite alternate-reverse",
         }}
       />
-      {/* Cyan accent blob */}
       <div
         className="absolute -bottom-[10%] left-[20%] w-[50vw] h-[50vw] rounded-full mix-blend-screen"
         style={{
@@ -31,7 +31,6 @@ export default function AuroraBackground() {
           animation: "blob 20s infinite alternate",
         }}
       />
-      {/* Noise grain overlay */}
       <div
         className="absolute inset-0 pointer-events-none"
         style={{
