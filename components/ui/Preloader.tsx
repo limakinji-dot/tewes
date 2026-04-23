@@ -87,7 +87,7 @@ export default function Preloader({ onComplete }: { onComplete: () => void }) {
           <span style={{ color: "#d4a847" }}>-X</span>
         </div>
         <div ref={subtitleRef} className="text-[10px] font-mono text-white/30 tracking-[0.4em]" style={{ opacity: 0 }}>
-          SONNETRADE
+          QUANTUM EXECUTION SYSTEM
         </div>
       </div>
 
