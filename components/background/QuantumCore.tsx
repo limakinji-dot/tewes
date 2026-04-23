@@ -31,7 +31,6 @@ export default function QuantumCore({ section }: { section: number }) {
     return latestTheme === "profit" ? "rgba(74,222,128,0.2)" : latestTheme === "loss" ? "rgba(248,113,113,0.2)" : "rgba(96,165,250,0.2)";
   }, [latestTheme]);
 
-  // Generate persistent particles
   const particles = useMemo<Particle[]>(() => {
     const arr: Particle[] = [];
     for (let i = 0; i < 24; i++) {
@@ -47,38 +46,34 @@ export default function QuantumCore({ section }: { section: number }) {
     return arr;
   }, []);
 
-  // Main scroll-driven morph animation
   useEffect(() => {
     if (!wrapperRef.current || !coreRef.current) return;
 
     const tl = gsap.timeline({ defaults: { duration: 1.2, ease: "power3.inOut" } });
 
     switch (section) {
-      case 0: // Hero — objek utuh, tenang, besar
+      case 0:
         tl.to(wrapperRef.current, { x: 0, scale: 1, rotateY: 0, rotateX: 0 }, 0)
           .to(coreRef.current, { scale: 1, opacity: 1 }, 0)
           .to(ring1Ref.current, { rotateX: 75, rotateZ: 0, scale: 1 }, 0)
           .to(ring2Ref.current, { rotateX: 45, rotateZ: 30, scale: 1 }, 0)
           .to(ring3Ref.current, { rotateX: 0, rotateZ: -20, scale: 1 }, 0);
         break;
-
-      case 1: // Live Logic — objek membelah, cincin terpisah, partikel jadi candle
+      case 1:
         tl.to(wrapperRef.current, { x: "-20vw", scale: 0.9, rotateY: 15 }, 0)
           .to(coreRef.current, { scale: 0.7, opacity: 0.9 }, 0)
           .to(ring1Ref.current, { rotateX: 90, rotateZ: 45, scale: 1.3, y: -40 }, 0)
           .to(ring2Ref.current, { rotateX: 0, rotateZ: 90, scale: 1.1, y: 0 }, 0)
           .to(ring3Ref.current, { rotateX: 60, rotateZ: -60, scale: 0.9, y: 40 }, 0);
         break;
-
-      case 2: // History — objek menjadi flat grid, cincin jadi heksagonal
+      case 2:
         tl.to(wrapperRef.current, { x: 0, scale: 0.85, rotateY: 0 }, 0)
           .to(coreRef.current, { scale: 0.5, opacity: 0.6 }, 0)
           .to(ring1Ref.current, { rotateX: 0, rotateZ: 0, scale: 1.5, opacity: 0.3 }, 0)
           .to(ring2Ref.current, { rotateX: 0, rotateZ: 30, scale: 1.2, opacity: 0.5 }, 0)
           .to(ring3Ref.current, { rotateX: 0, rotateZ: -15, scale: 1, opacity: 0.7 }, 0);
         break;
-
-      case 3: // PnL — objek meledak energi, cincin berputar cepat, inti membesar
+      case 3:
         tl.to(wrapperRef.current, { x: 0, scale: 1.15, rotateY: 0 }, 0)
           .to(coreRef.current, { scale: 1.3, opacity: 1 }, 0)
           .to(ring1Ref.current, { rotateX: 80, rotateZ: 180, scale: 1.2 }, 0)
@@ -88,7 +83,6 @@ export default function QuantumCore({ section }: { section: number }) {
     }
   }, [section]);
 
-  // Continuous particle animation + constellation lines
   useEffect(() => {
     let raf: number;
     const svg = svgRef.current;
@@ -100,20 +94,17 @@ export default function QuantumCore({ section }: { section: number }) {
       const cx = w / 2;
       const cy = h / 2;
 
-      // Update particle positions
       const positions = particles.map((p, i) => {
         const t = time * p.speed + p.angle;
         let r = p.radius;
 
-        // Section-specific radius morph
-        if (section === 1) r += Math.sin(t * 3) * 20; // Wave breathing
-        if (section === 2) r = 60 + (i % 5) * 25; // Grid snap
-        if (section === 3) r += Math.sin(time * 0.005 + i) * 30; // Explosion pulse
+        if (section === 1) r += Math.sin(t * 3) * 20;
+        if (section === 2) r = 60 + (i % 5) * 25;
+        if (section === 3) r += Math.sin(time * 0.005 + i) * 30;
 
         const x = cx + Math.cos(t) * r;
         const y = cy + Math.sin(t) * r * 0.6 + p.yOffset;
 
-        // Update DOM particle
         const el = particlesRef.current[i];
         if (el) {
           el.style.transform = `translate(${x - cx}px, ${y - cy}px)`;
@@ -123,7 +114,6 @@ export default function QuantumCore({ section }: { section: number }) {
         return { x, y, size: p.size };
       });
 
-      // Draw constellation lines between nearby particles
       let pathData = "";
       for (let i = 0; i < positions.length; i++) {
         for (let j = i + 1; j < positions.length; j++) {
@@ -133,13 +123,11 @@ export default function QuantumCore({ section }: { section: number }) {
 
           const threshold = section === 3 ? 120 : section === 1 ? 80 : 60;
           if (dist < threshold) {
-            const opacity = 1 - dist / threshold;
             pathData += `M${positions[i].x},${positions[i].y} L${positions[j].x},${positions[j].y} `;
           }
         }
       }
 
-      // Update SVG lines
       const pathEl = svg.querySelector("path");
       if (pathEl) {
         pathEl.setAttribute("d", pathData);
@@ -151,7 +139,7 @@ export default function QuantumCore({ section }: { section: number }) {
     };
 
     raf = requestAnimationFrame(animate);
-    return () => cancelAnimationFrame(raf);
+    return () => cancelAnimationFrame(af);
   }, [particles, section, colorDim]);
 
   return (
@@ -159,9 +147,8 @@ export default function QuantumCore({ section }: { section: number }) {
       <div
         ref={wrapperRef}
         className="relative w-[400px] h-[400px] transition-none"
-        style={{ transformStyle: "preserve-3d" }}
+        style={{ transformStyle: "preserve-3d", willChange: "transform", backfaceVisibility: "hidden" }}
       >
-        {/* ── SVG Constellation Lines (connecting particles) ── */}
         <svg
           ref={svgRef}
           className="absolute inset-0 w-full h-full pointer-events-none"
@@ -176,7 +163,6 @@ export default function QuantumCore({ section }: { section: number }) {
           />
         </svg>
 
-        {/* ── Ring 3 (Outer) ── */}
         <div
           ref={ring3Ref}
           className="absolute inset-0 flex items-center justify-center"
@@ -193,7 +179,6 @@ export default function QuantumCore({ section }: { section: number }) {
               boxShadow: `0 0 40px ${colorDim}`,
             }}
           />
-          {/* Orbiting nodes on ring 3 */}
           {[0, 120, 240].map((deg, i) => (
             <div
               key={`r3-${i}`}
@@ -212,7 +197,6 @@ export default function QuantumCore({ section }: { section: number }) {
           ))}
         </div>
 
-        {/* ── Ring 2 (Middle) ── */}
         <div
           ref={ring2Ref}
           className="absolute inset-0 flex items-center justify-center"
@@ -229,7 +213,6 @@ export default function QuantumCore({ section }: { section: number }) {
               boxShadow: `inset 0 0 30px ${colorDim}`,
             }}
           />
-          {/* Data points on ring 2 */}
           {Array.from({ length: 6 }).map((_, i) => {
             const angle = (i / 6) * Math.PI * 2;
             return (
@@ -254,7 +237,6 @@ export default function QuantumCore({ section }: { section: number }) {
           })}
         </div>
 
-        {/* ── Ring 1 (Inner) ── */}
         <div
           ref={ring1Ref}
           className="absolute inset-0 flex items-center justify-center"
@@ -270,10 +252,11 @@ export default function QuantumCore({ section }: { section: number }) {
               opacity: 0.6,
             }}
           />
-          {/* Rotating inner markers */}
           <div
-            className="absolute w-full h-full animate-[spin_8s_linear_infinite]"
-            style={{ animationDirection: section === 3 ? "reverse" : "normal", animationDuration: section === 3 ? "3s" : "8s" }}
+            className="absolute w-full h-full"
+            style={{
+              animation: `spin ${section === 3 ? "3s" : "8s"} linear infinite ${section === 3 ? "reverse" : "normal"}`,
+            }}
           >
             {[0, 90, 180, 270].map((deg) => (
               <div
@@ -290,13 +273,11 @@ export default function QuantumCore({ section }: { section: number }) {
           </div>
         </div>
 
-        {/* ── Central Core (Nucleus) ── */}
         <div
           ref={coreRef}
           className="absolute inset-0 flex items-center justify-center"
           style={{ zIndex: 10 }}
         >
-          {/* Glow aura */}
           <div
             className="absolute w-24 h-24 rounded-full transition-colors duration-700"
             style={{
@@ -306,7 +287,6 @@ export default function QuantumCore({ section }: { section: number }) {
               animation: "pulse 3s ease-in-out infinite",
             }}
           />
-          {/* Core sphere */}
           <div
             className="relative w-12 h-12 rounded-full flex items-center justify-center transition-all duration-700"
             style={{
@@ -323,7 +303,6 @@ export default function QuantumCore({ section }: { section: number }) {
               }}
             />
           </div>
-          {/* Active signal count badge (only in section 1) */}
           {section === 1 && state.active_signal_count > 0 && (
             <div
               className="absolute -top-2 -right-2 w-6 h-6 rounded-full flex items-center justify-center text-[9px] font-bold font-mono text-black"
@@ -334,14 +313,13 @@ export default function QuantumCore({ section }: { section: number }) {
           )}
         </div>
 
-        {/* ── Floating Particles (constellation nodes) ── */}
         {particles.map((p, i) => (
           <div
             key={`p-${i}`}
             ref={(el) => {
               if (el) particlesRef.current[i] = el;
             }}
-            className="absolute top-1/2 left-1/2 w-1 h-1 rounded-full transition-colors duration-700 pointer-events-none"
+            className="absolute top-1/2 left-1/2 rounded-full transition-colors duration-700 pointer-events-none"
             style={{
               backgroundColor: i % 4 === 0 ? color : "rgba(255,255,255,0.5)",
               boxShadow: i % 4 === 0 ? `0 0 8px ${color}` : "none",
@@ -353,8 +331,6 @@ export default function QuantumCore({ section }: { section: number }) {
           />
         ))}
 
-        {/* ── Section-specific overlays ── */}
-        {/* Live Logic: mini candlesticks floating */}
         {section === 1 && (
           <div className="absolute inset-0 pointer-events-none">
             {Array.from({ length: 5 }).map((_, i) => (
@@ -373,7 +349,6 @@ export default function QuantumCore({ section }: { section: number }) {
           </div>
         )}
 
-        {/* History: hex grid overlay */}
         {section === 2 && (
           <div className="absolute inset-0 flex items-center justify-center pointer-events-none opacity-30">
             <svg width="200" height="200" viewBox="0 0 200 200" className="animate-[spin_60s_linear_infinite]">
@@ -387,7 +362,6 @@ export default function QuantumCore({ section }: { section: number }) {
           </div>
         )}
 
-        {/* PnL: radial burst lines */}
         {section === 3 && (
           <div className="absolute inset-0 pointer-events-none">
             {Array.from({ length: 8 }).map((_, i) => {
