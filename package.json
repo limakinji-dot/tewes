@@ -1,30 +1,36 @@
 {
+  "name": "agent-x",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint",
+    "vercel-build": "next build"
+  },
   "dependencies": {
+    "@gsap/react": "^2.1.0",
+    "clsx": "^2.1.0",
+    "framer-motion": "^11.0.0",
+    "geist": "^1.2.0",
+    "gsap": "^3.12.5",
+    "katex": "^0.16.9",
+    "lenis": "^1.1.0",
     "next": "14.2.0",
+    "qrcode": "^1.5.3",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
-    "three": "^0.160.0",
-    "@react-three/fiber": "^8.15.0",
-    "@react-three/drei": "^9.92.0",
-    "@react-three/postprocessing": "^2.15.0",
-    "gsap": "^3.12.5",
-    "@gsap/react": "^2.1.0",
-    "framer-motion": "^11.0.0",
-    "katex": "^0.16.9",
-    "qrcode": "^1.5.3",
-    "clsx": "^2.1.0",
-    "tailwind-merge": "^2.2.0",
-    "geist": "^1.2.0"
+    "tailwind-merge": "^2.2.0"
   },
   "devDependencies": {
     "@types/node": "^20",
+    "@types/qrcode": "^1.5.5",
     "@types/react": "^18",
     "@types/react-dom": "^18",
-    "@types/three": "^0.160.0",
-    "@types/qrcode": "^1.5.5",
-    "typescript": "^5",
-    "tailwindcss": "^3.4.0",
+    "autoprefixer": "^10",
     "postcss": "^8",
-    "autoprefixer": "^10"
+    "tailwindcss": "^3.4.0",
+    "typescript": "^5"
   }
 }
