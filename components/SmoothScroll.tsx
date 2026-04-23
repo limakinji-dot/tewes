@@ -12,15 +12,16 @@ export default function SmoothScroll({ children }: { children: React.ReactNode }
 
   useEffect(() => {
     const lenis = new Lenis({
-      duration: 1.2,
-      easing: (t: number) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
-      touchMultiplier: 2,
+      duration: 1.6,                                          // slower = more buttery
+      easing: (t: number) => 1 - Math.pow(1 - t, 4),        // quartic ease-out, very silky
+      touchMultiplier: 1.8,
+      wheelMultiplier: 0.9,                                   // slightly reduced for control
       infinite: false,
+      syncTouch: false,                                       // native on mobile
     });
 
     lenisRef.current = lenis;
 
-    // Sync Lenis dengan GSAP ScrollTrigger
     lenis.on("scroll", ScrollTrigger.update);
 
     gsap.ticker.add((time) => {
