@@ -3,6 +3,7 @@
 import { useRef, useEffect, useMemo } from "react";
 import { useTrading } from "@/hooks/useTradingContext";
 import gsap from "gsap";
+import OrbCore from "@/components/background/OrbCore";
 
 interface Particle {
   angle: number;
@@ -278,31 +279,7 @@ export default function QuantumCore({ section }: { section: number }) {
           className="absolute inset-0 flex items-center justify-center"
           style={{ zIndex: 10 }}
         >
-          <div
-            className="absolute w-24 h-24 rounded-full transition-colors duration-700"
-            style={{
-              background: `radial-gradient(circle, ${color} 0%, transparent 70%)`,
-              filter: "blur(25px)",
-              opacity: 0.5,
-              animation: "pulse 3s ease-in-out infinite",
-            }}
-          />
-          <div
-            className="relative w-12 h-12 rounded-full flex items-center justify-center transition-all duration-700"
-            style={{
-              background: `radial-gradient(circle at 30% 30%, ${color}, #030303)`,
-              boxShadow: `0 0 40px ${colorDim}, inset 0 0 20px ${colorDim}`,
-              border: `1px solid ${colorDim}`,
-            }}
-          >
-            <div
-              className="w-3 h-3 rounded-full transition-colors duration-700"
-              style={{
-                backgroundColor: color,
-                boxShadow: `0 0 20px ${color}`,
-              }}
-            />
-          </div>
+          <OrbCore color={color} section={section} size={220} />
           {section === 1 && state.active_signal_count > 0 && (
             <div
               className="absolute -top-2 -right-2 w-6 h-6 rounded-full flex items-center justify-center text-[9px] font-bold font-mono text-black"
