@@ -4,6 +4,7 @@ import { GeistMono } from "geist/font/mono";
 import "katex/dist/katex.min.css";
 import "./globals.css";
 import { TradingProvider } from "@/hooks/useTradingContext";
+import SmoothScroll from "@/components/SmoothScroll";
 
 export const metadata: Metadata = {
   title: "Agent-X | Quantum Execution",
@@ -18,7 +19,9 @@ export default function RootLayout({
   return (
     <html lang="en" className={`${GeistSans.variable} ${GeistMono.variable}`}>
       <body className="font-sans antialiased">
-        <TradingProvider>{children}</TradingProvider>
+        <TradingProvider>
+          <SmoothScroll>{children}</SmoothScroll>
+        </TradingProvider>
       </body>
     </html>
   );
