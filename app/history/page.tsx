@@ -46,7 +46,7 @@ export default function HistoryPage() {
           className="mb-10"
         >
           <Link
-            href="/"
+            href="/?section=history"
             className="inline-flex items-center gap-2 text-[11px] font-mono text-white/30 hover:text-white/60 transition-colors mb-8 group"
           >
             <span className="group-hover:-translate-x-1 transition-transform">←</span>
