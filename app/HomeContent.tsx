@@ -6,7 +6,9 @@ import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { useGSAP } from "@gsap/react";
 import { useLenis } from "@/components/SmoothScroll";
+import { useAuth } from "@/hooks/useAuthContext";
 import AuroraBackground from "@/components/background/AuroraBackground";
+import CryptoCoinBackground from "@/components/background/CryptoCoinBackground";
 import QuantumCore from "@/components/background/QuantumCore";
 import LaTeXOverlay from "@/components/ui/LaTeXOverlay";
 import Preloader from "@/components/ui/Preloader";
@@ -24,10 +26,11 @@ export default function HomeContent() {
   const [section, setSection] = useState(0);
   const [loaded, setLoaded] = useState(false);
   const [showPreloader, setShowPreloader] = useState(false);
-  
+
   const searchParams = useSearchParams();
   const targetSection = searchParams.get("section");
   const lenis = useLenis();
+  const { isAuthenticated } = useAuth();
 
   // Cek sessionStorage & referrer — skip preloader kalau sudah pernah load
   // atau kalau user navigasi internal dari halaman lain
@@ -35,7 +38,8 @@ export default function HomeContent() {
     if (typeof window === "undefined") return;
 
     const alreadyLoaded = sessionStorage.getItem(PRELOADER_KEY);
-    const isInternalNav = document.referrer && document.referrer.includes(window.location.origin);
+    const isInternalNav =
+      document.referrer && document.referrer.includes(window.location.origin);
 
     if (alreadyLoaded || isInternalNav) {
       setLoaded(true);
@@ -51,7 +55,7 @@ export default function HomeContent() {
   // Scroll ke section target setelah load (dari navigasi internal)
   useEffect(() => {
     if (!loaded || !targetSection || !lenis) return;
-    
+
     const timer = setTimeout(() => {
       const el = document.getElementById(targetSection);
       if (el) {
@@ -70,35 +74,47 @@ export default function HomeContent() {
     }
   }, []);
 
-  useGSAP(() => {
-    if (!containerRef.current || !loaded) return;
-    const sections = gsap.utils.toArray<HTMLElement>(".story-section");
+  useGSAP(
+    () => {
+      if (!containerRef.current || !loaded) return;
+      const sections = gsap.utils.toArray<HTMLElement>(".story-section");
 
-    sections.forEach((sec, i) => {
-      ScrollTrigger.create({
-        trigger: sec,
-        start: "top center",
-        end: "bottom center",
-        onEnter: () => setSection(i),
-        onEnterBack: () => setSection(i),
+      sections.forEach((sec, i) => {
+        ScrollTrigger.create({
+          trigger: sec,
+          start: "top center",
+          end: "bottom center",
+          onEnter: () => setSection(i),
+          onEnterBack: () => setSection(i),
+        });
       });
-    });
-  }, { scope: containerRef, dependencies: [loaded] });
+    },
+    { scope: containerRef, dependencies: [loaded] }
+  );
 
   return (
     <>
       {showPreloader && <Preloader onComplete={handlePreloaderComplete} />}
 
       <main ref={containerRef} className="relative bg-[#030303]">
+        <CryptoCoinBackground />
         <AuroraBackground />
         <QuantumCore section={section} />
         <LaTeXOverlay />
 
         <div className="relative z-10">
-          <div className="story-section" id="hero"><HeroSection /></div>
-          <div className="story-section" id="live-logic"><LiveLogicSection /></div>
-          <div className="story-section" id="history"><HistorySection /></div>
-          <div className="story-section" id="pnl"><PnLShowcaseSection /></div>
+          <div className="story-section" id="hero">
+            <HeroSection />
+          </div>
+          <div className="story-section" id="live-logic">
+            <LiveLogicSection />
+          </div>
+          <div className="story-section" id="history">
+            <HistorySection />
+          </div>
+          <div className="story-section" id="pnl">
+            <PnLShowcaseSection />
+          </div>
         </div>
       </main>
     </>
