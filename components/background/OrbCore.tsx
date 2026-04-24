@@ -4,23 +4,31 @@ import { useEffect, useRef } from "react";
 import * as THREE from "three";
 
 interface OrbCoreProps {
-  color?: string;       // hex string e.g. "#60a5fa"
+  color?: string;
   section?: number;
-  size?: number;        // canvas size in px
+  size?: number;
 }
 
-export default function OrbCore({ color = "#60a5fa", section = 0, size = 220 }: OrbCoreProps) {
+export default function OrbCore({ color = "#60a5fa", section = 0, size = 200 }: OrbCoreProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const stateRef = useRef<{
-    mat:  THREE.LineBasicMaterial;
+    mat: THREE.LineBasicMaterial;
     mmat: THREE.LineBasicMaterial;
     imat: THREE.MeshBasicMaterial;
     rmat: THREE.LineBasicMaterial;
-    pm:   THREE.PointsMaterial;
+    pm: THREE.PointsMaterial;
     renderer: THREE.WebGLRenderer;
+    scene: THREE.Scene;
+    camera: THREE.PerspectiveCamera;
+    orb: THREE.LineSegments;
+    morb: THREE.LineSegments;
+    iorb: THREE.Mesh;
+    ring: THREE.Mesh;
+    pts: THREE.Points;
+    clock: THREE.Clock;
+    animating: boolean;
   } | null>(null);
 
-  // Re-colour when prop changes
   useEffect(() => {
     if (!stateRef.current) return;
     const hex = new THREE.Color(color).getHex();
@@ -36,67 +44,64 @@ export default function OrbCore({ color = "#60a5fa", section = 0, size = 220 }: 
     const canvas = canvasRef.current;
     if (!canvas) return;
 
-    const W = canvas.offsetWidth || size;
-    const H = canvas.offsetHeight || size;
+    const W = size;
+    const H = size;
 
-    const scene    = new THREE.Scene();
-    const camera   = new THREE.PerspectiveCamera(55, W / H, 0.1, 1000);
+    const scene = new THREE.Scene();
+    const camera = new THREE.PerspectiveCamera(55, W / H, 0.1, 1000);
     camera.position.z = 3.2;
 
-    const renderer = new THREE.WebGLRenderer({ canvas, alpha: true, antialias: true });
-    renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+    const renderer = new THREE.WebGLRenderer({ canvas, alpha: true, antialias: false });
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.5));
     renderer.setSize(W, H);
     renderer.setClearColor(0x000000, 0);
 
     const hex = new THREE.Color(color).getHex();
 
-    // Outer wireframe orb
-    const geo  = new THREE.IcosahedronGeometry(1.1, 3);
+    const geo = new THREE.IcosahedronGeometry(1.1, 2);
     const wgeo = new THREE.WireframeGeometry(geo);
-    const mat  = new THREE.LineBasicMaterial({ color: hex, opacity: 0.35, transparent: true });
-    const orb  = new THREE.LineSegments(wgeo, mat);
+    const mat = new THREE.LineBasicMaterial({ color: hex, opacity: 0.3, transparent: true });
+    const orb = new THREE.LineSegments(wgeo, mat);
     scene.add(orb);
 
-    // Mid orb
-    const mgeo  = new THREE.IcosahedronGeometry(0.75, 1);
+    const mgeo = new THREE.IcosahedronGeometry(0.75, 1);
     const mwgeo = new THREE.WireframeGeometry(mgeo);
-    const mmat  = new THREE.LineBasicMaterial({ color: hex, opacity: 0.2, transparent: true });
-    const morb  = new THREE.LineSegments(mwgeo, mmat);
+    const mmat = new THREE.LineBasicMaterial({ color: hex, opacity: 0.15, transparent: true });
+    const morb = new THREE.LineSegments(mwgeo, mmat);
     scene.add(morb);
 
-    // Inner glow wireframe sphere
-    const igeo = new THREE.SphereGeometry(0.35, 16, 16);
-    const imat = new THREE.MeshBasicMaterial({ color: hex, opacity: 0.15, transparent: true, wireframe: true });
+    const igeo = new THREE.SphereGeometry(0.35, 12, 12);
+    const imat = new THREE.MeshBasicMaterial({ color: hex, opacity: 0.1, transparent: true, wireframe: true });
     const iorb = new THREE.Mesh(igeo, imat);
     scene.add(iorb);
 
-    // Ring
-    const rgeo = new THREE.TorusGeometry(1.5, 0.003, 2, 100);
-    const rmat = new THREE.LineBasicMaterial({ color: hex, opacity: 0.18, transparent: true });
+    const rgeo = new THREE.TorusGeometry(1.5, 0.003, 2, 80);
+    const rmat = new THREE.LineBasicMaterial({ color: hex, opacity: 0.12, transparent: true });
     const ring = new THREE.Mesh(rgeo, rmat);
     ring.rotation.x = Math.PI / 3;
     scene.add(ring);
 
-    // Particles
-    const N   = 400;
-    const pg  = new THREE.BufferGeometry();
+    const N = 200;
+    const pg = new THREE.BufferGeometry();
     const pos = new Float32Array(N * 3);
     for (let i = 0; i < N * 3; i++) pos[i] = (Math.random() - 0.5) * 9;
     pg.setAttribute("position", new THREE.BufferAttribute(pos, 3));
-    const pm  = new THREE.PointsMaterial({ color: hex, size: 0.025, opacity: 0.4, transparent: true });
+    const pm = new THREE.PointsMaterial({ color: hex, size: 0.02, opacity: 0.3, transparent: true });
     const pts = new THREE.Points(pg, pm);
     scene.add(pts);
 
-    // Store refs for colour updates
-    stateRef.current = { mat, mmat, imat, rmat, pm, renderer };
-
     const clock = new THREE.Clock();
     let rafId: number;
+    let isVisible = true;
+
+    stateRef.current = {
+      mat, mmat, imat, rmat, pm, renderer, scene, camera,
+      orb, morb, iorb, ring, pts, clock, animating: true,
+    };
 
     function animate() {
-      rafId = requestAnimationFrame(animate);
-      const t  = clock.getElapsedTime();
-      // Use section prop instead of window.scrollY — section 0→3 maps to 0→1
+      if (!isVisible) { rafId = requestAnimationFrame(animate); return; }
+      const t = clock.getElapsedTime();
       const sp = section / 3;
       const scale = 1 - sp * 0.25;
 
@@ -105,41 +110,48 @@ export default function OrbCore({ color = "#60a5fa", section = 0, size = 220 }: 
       iorb.scale.setScalar(scale * 0.3);
 
       const rs = 0.004 + sp * 0.012;
-      orb.rotation.y  += rs;
-      orb.rotation.x  += rs * 0.4;
+      orb.rotation.y += rs;
+      orb.rotation.x += rs * 0.4;
       morb.rotation.y -= rs * 0.8;
       morb.rotation.z += rs * 0.3;
       iorb.rotation.y += rs * 1.5;
       ring.rotation.z += 0.002;
-      pts.rotation.y  += 0.0004;
-      pts.rotation.x  += 0.0002;
+      pts.rotation.y += 0.0004;
+      pts.rotation.x += 0.0002;
 
       renderer.render(scene, camera);
+      rafId = requestAnimationFrame(animate);
     }
     animate();
 
     const ro = new ResizeObserver(() => {
-      const W2 = canvas.offsetWidth;
-      const H2 = canvas.offsetHeight;
-      if (!W2 || !H2) return;
-      camera.aspect = W2 / H2;
+      const w2 = canvas.offsetWidth || size;
+      const h2 = canvas.offsetHeight || size;
+      camera.aspect = w2 / h2;
       camera.updateProjectionMatrix();
-      renderer.setSize(W2, H2);
+      renderer.setSize(w2, h2);
     });
     ro.observe(canvas);
+
+    const obs = new IntersectionObserver(
+      ([e]) => { isVisible = e.isIntersecting; },
+      { threshold: 0 }
+    );
+    obs.observe(canvas);
 
     return () => {
       cancelAnimationFrame(rafId);
       ro.disconnect();
+      obs.disconnect();
       renderer.dispose();
       stateRef.current = null;
     };
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []); // init once; color + section handled via separate effects
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
-  // Update speed/scale based on section without reinit
-  const sectionRef = useRef(section);
-  useEffect(() => { sectionRef.current = section; }, [section]);
+  useEffect(() => {
+    if (stateRef.current) stateRef.current.animating = true;
+  }, [section]);
 
   return (
     <canvas
