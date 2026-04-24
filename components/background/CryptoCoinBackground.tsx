@@ -4,27 +4,27 @@ import { useMemo } from "react";
 import { motion } from "framer-motion";
 
 const COINS = [
-  { id: "bitcoin", name: "BTC", url: "https://assets.coingecko.com/coins/images/1/small/bitcoin.png" },
-  { id: "ethereum", name: "ETH", url: "https://assets.coingecko.com/coins/images/279/small/ethereum.png" },
-  { id: "solana", name: "SOL", url: "https://assets.coingecko.com/coins/images/4128/small/solana.png" },
-  { id: "binancecoin", name: "BNB", url: "https://assets.coingecko.com/coins/images/825/small/bnb-icon2_2x.png" },
-  { id: "ripple", name: "XRP", url: "https://assets.coingecko.com/coins/images/44/small/xrp-symbol-white-128.png" },
-  { id: "dogecoin", name: "DOGE", url: "https://assets.coingecko.com/coins/images/5/small/dogecoin.png" },
-  { id: "cardano", name: "ADA", url: "https://assets.coingecko.com/coins/images/975/small/cardano.png" },
-  { id: "tron", name: "TRX", url: "https://assets.coingecko.com/coins/images/1094/small/tron-logo.png" },
-  { id: "chainlink", name: "LINK", url: "https://assets.coingecko.com/coins/images/877/small/chainlink-new-logo.png" },
-  { id: "polkadot", name: "DOT", url: "https://assets.coingecko.com/coins/images/12171/small/polkadot.png" },
-  { id: "litecoin", name: "LTC", url: "https://assets.coingecko.com/coins/images/2/small/litecoin.png" },
-  { id: "avalanche", name: "AVAX", url: "https://assets.coingecko.com/coins/images/12559/small/Avalanche_Circle_RedWhite_Trans.png" },
+  { id: "bitcoin", name: "BTC", path: "/images/coins/bitcoin.png" },
+  { id: "ethereum", name: "ETH", path: "/images/coins/ethereum.png" },
+  { id: "solana", name: "SOL", path: "/images/coins/solana.png" },
+  { id: "binancecoin", name: "BNB", path: "/images/coins/bnb.png" },
+  { id: "ripple", name: "XRP", path: "/images/coins/xrp.png" },
+  { id: "dogecoin", name: "DOGE", path: "/images/coins/dogecoin.png" },
+  { id: "cardano", name: "ADA", path: "/images/coins/cardano.png" },
+  { id: "tron", name: "TRX", path: "/images/coins/tron.png" },
+  { id: "chainlink", name: "LINK", path: "/images/coins/chainlink.png" },
+  { id: "polkadot", name: "DOT", path: "/images/coins/polkadot.png" },
+  { id: "litecoin", name: "LTC", path: "/images/coins/litecoin.png" },
+  { id: "avalanche", name: "AVAX", path: "/images/coins/avalanche.png" },
 ];
 
 interface FloatingCoin {
   id: string;
   name: string;
-  url: string;
-  x: number;      // 0-100 %
-  y: number;      // 0-100 %
-  size: number;   // px
+  path: string;
+  x: number;
+  y: number;
+  size: number;
   duration: number;
   delay: number;
   opacity: number;
@@ -41,10 +41,10 @@ export default function CryptoCoinBackground() {
         ...coin,
         x: Math.random() * 100,
         y: Math.random() * 100,
-        size: 24 + Math.random() * 56, // 24px - 80px
-        duration: 12 + Math.random() * 20, // 12-32s
+        size: 24 + Math.random() * 56,
+        duration: 12 + Math.random() * 20,
         delay: Math.random() * -30,
-        opacity: 0.04 + Math.random() * 0.08, // 0.04 - 0.12
+        opacity: 0.04 + Math.random() * 0.08,
         blur: Math.random() > 0.7 ? 2 : 0,
         driftX: (Math.random() - 0.5) * 120,
         driftY: (Math.random() - 0.5) * 120,
@@ -79,20 +79,21 @@ export default function CryptoCoinBackground() {
             ease: "easeInOut",
           }}
         >
-          <div
-            className="w-full h-full rounded-full"
+          {/* Pakai <img> native biar pasti muncul */}
+          <img
+            src={coin.path}
+            alt={coin.name}
+            className="w-full h-full object-contain"
             style={{
-              backgroundImage: `url(${coin.url})`,
-              backgroundSize: "contain",
-              backgroundRepeat: "no-repeat",
-              backgroundPosition: "center",
-              boxShadow: `0 0 ${coin.size * 0.8}px ${coin.size * 0.3}px rgba(255,255,255,0.03)`,
+              filter: `drop-shadow(0 0 ${coin.size * 0.3}px rgba(255,255,255,0.08))`,
             }}
+            loading="lazy"
+            draggable={false}
           />
         </motion.div>
       ))}
 
-      {/* Subtle gradient overlays to fade edges */}
+      {/* Edge fade overlays */}
       <div className="absolute inset-0 bg-gradient-to-b from-[#030303] via-transparent to-[#030303] opacity-60 pointer-events-none" />
       <div className="absolute inset-0 bg-gradient-to-r from-[#030303] via-transparent to-[#030303] opacity-40 pointer-events-none" />
     </div>
