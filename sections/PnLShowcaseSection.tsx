@@ -46,7 +46,7 @@ export default function PnLShowcaseSection() {
       className="relative min-h-screen flex items-center justify-center z-10 px-4"
       style={{ paddingTop: "8rem", paddingBottom: "8rem" }}
     >
-      <div className="max-w-6xl mx-auto w-full grid lg:grid-cols-2 gap-16 items-center">
+      <div className="max-w-6xl mx-auto w-full grid lg:grid-cols-2 gap-10 items-center">
         <div>
           <motion.div
             initial={{ opacity: 0, y: 30 }}
