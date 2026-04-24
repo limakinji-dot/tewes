@@ -40,10 +40,10 @@ export default function CryptoCoinBackground() {
         ...coin,
         x: Math.random() * 100,
         y: Math.random() * 100,
-        size: 32 + Math.random() * 64, // lebih besar: 32px - 96px
+        size: 28 + Math.random() * 52, // 28px - 80px
         duration: 14 + Math.random() * 18,
         delay: Math.random() * -20,
-        opacity: 0.18 + Math.random() * 0.32, // 18% - 50% (kelihatan jelas di dark bg)
+        opacity: 0.25 + Math.random() * 0.35, // 25% - 60% ← FIX UTAMA
         driftX: (Math.random() - 0.5) * 100,
         driftY: (Math.random() - 0.5) * 100,
       };
@@ -68,7 +68,7 @@ export default function CryptoCoinBackground() {
             y: [0, coin.driftY, 0],
             x: [0, coin.driftX, 0],
             rotate: [0, 360],
-            scale: [1, 1.1, 0.95, 1],
+            scale: [1, 1.08, 0.96, 1],
           }}
           transition={{
             duration: coin.duration,
@@ -82,7 +82,8 @@ export default function CryptoCoinBackground() {
             alt={coin.name}
             className="w-full h-full object-contain"
             style={{
-              filter: `drop-shadow(0 0 ${coin.size * 0.4}px rgba(255,255,255,0.2))`,
+              // Glow putih lembut biar kelihatan di dark bg
+              filter: `drop-shadow(0 0 ${coin.size * 0.5}px rgba(255,255,255,0.25))`,
             }}
             draggable={false}
           />
