@@ -1,7 +1,6 @@
-// QuantumCore.tsx — full rewrite dengan integrated orbiting coins
 "use client";
 
-import { useRef, useEffect, useMemo } from "react";
+import { useRef, useEffect, useMemo, useCallback } from "react";
 import { useTrading } from "@/hooks/useTradingContext";
 import gsap from "gsap";
 import OrbCore from "@/components/background/OrbCore";
@@ -24,13 +23,23 @@ interface OrbitingCoin {
   id: string;
   name: string;
   path: string;
-  radius: number;      // orbit radius
-  speed: number;       // orbit speed
-  startAngle: number;  // initial position
+  radius: number;
+  speed: number;
+  startAngle: number;
   size: number;
-  tilt: number;        // 3D tilt angle
-  yOffset: number;     // vertical oscillation
+  tilt: number;
+  yOffset: number;
   glowColor: string;
+  ringIndex: number;
+}
+
+interface Particle {
+  angle: number;
+  radius: number;
+  speed: number;
+  size: number;
+  ring: number;
+  yOffset: number;
 }
 
 export default function QuantumCore({ section }: { section: number }) {
@@ -44,6 +53,11 @@ export default function QuantumCore({ section }: { section: number }) {
   const coinsRef = useRef<HTMLDivElement[]>([]);
   const { state, latestTheme } = useTrading();
 
+  const isMobile = useMemo(() => {
+    if (typeof window === "undefined") return false;
+    return window.innerWidth < 768;
+  }, []);
+
   const color = useMemo(() => {
     return latestTheme === "profit" ? "#4ade80" : latestTheme === "loss" ? "#f87171" : "#60a5fa";
   }, [latestTheme]);
@@ -55,52 +69,61 @@ export default function QuantumCore({ section }: { section: number }) {
   // Generate orbiting coins — luxury 3D orbit parameters
   const orbitingCoins = useMemo<OrbitingCoin[]>(() => {
     const glowColors = [
-      "rgba(212,168,71,0.4)",   // gold
-      "rgba(96,165,250,0.35)",  // blue  
-      "rgba(196,181,253,0.35)", // violet
-      "rgba(74,222,128,0.3)",   // green
+      "rgba(212,168,71,0.5)",   // gold
+      "rgba(96,165,250,0.4)",   // blue
+      "rgba(196,181,253,0.4)",  // violet
+      "rgba(74,222,128,0.35)",  // green
     ];
+
+    const coinCount = isMobile ? 8 : 16;
     
-    return Array.from({ length: 16 }).map((_, i) => {
+    return Array.from({ length: coinCount }).map((_, i) => {
       const coin = COINS[i % COINS.length];
-      const ringIndex = i % 3; // 0=outer, 1=mid, 2=inner
+      const ringIndex = i % 3;
       
-      const baseRadius = ringIndex === 0 ? 280 : ringIndex === 1 ? 200 : 140;
-      const radiusVariation = (Math.random() - 0.5) * 40;
+      // Mobile: tighter orbits, smaller radius
+      const baseRadius = isMobile 
+        ? (ringIndex === 0 ? 160 : ringIndex === 1 ? 110 : 75)
+        : (ringIndex === 0 ? 280 : ringIndex === 1 ? 200 : 140);
+      
+      const radiusVariation = (Math.random() - 0.5) * (isMobile ? 20 : 40);
       
       return {
         ...coin,
         radius: baseRadius + radiusVariation,
-        speed: 0.0003 + (Math.random() * 0.0004) + (ringIndex * 0.0002), // outer slower, inner faster
-        startAngle: (i / 16) * Math.PI * 2 + (Math.random() * 0.5),
-        size: 28 + Math.random() * 24, // 28px - 52px
-        tilt: (Math.random() - 0.5) * 30, // slight 3D tilt
-        yOffset: (Math.random() - 0.5) * 60,
+        speed: 0.0003 + (Math.random() * 0.0004) + (ringIndex * 0.0002),
+        startAngle: (i / coinCount) * Math.PI * 2 + (Math.random() * 0.5),
+        size: isMobile ? 20 + Math.random() * 16 : 28 + Math.random() * 24,
+        tilt: (Math.random() - 0.5) * 30,
+        yOffset: (Math.random() - 0.5) * (isMobile ? 30 : 60),
         glowColor: glowColors[i % glowColors.length],
+        ringIndex,
       };
     });
-  }, []);
+  }, [isMobile]);
 
-  const particles = useMemo(() => {
-    const arr = [];
-    for (let i = 0; i < 24; i++) {
+  const particles = useMemo<Particle[]>(() => {
+    const count = isMobile ? 12 : 24;
+    const arr: Particle[] = [];
+    for (let i = 0; i < count; i++) {
       arr.push({
-        angle: (i / 24) * Math.PI * 2,
-        radius: 70 + Math.random() * 60,
+        angle: (i / count) * Math.PI * 2,
+        radius: isMobile ? 40 + Math.random() * 35 : 70 + Math.random() * 60,
         speed: 0.002 + Math.random() * 0.004,
-        size: 1.5 + Math.random() * 2.5,
+        size: isMobile ? 1 + Math.random() * 1.5 : 1.5 + Math.random() * 2.5,
         ring: i % 3,
-        yOffset: (Math.random() - 0.5) * 40,
+        yOffset: (Math.random() - 0.5) * (isMobile ? 25 : 40),
       });
     }
     return arr;
-  }, []);
+  }, [isMobile]);
 
-  // GSAP section animations for orbs
+  // GSAP section animations — coins included in timeline
   useEffect(() => {
     if (!wrapperRef.current || !coreRef.current) return;
 
     const tl = gsap.timeline({ defaults: { duration: 1.2, ease: "power3.inOut" } });
+    const coinEls = coinsRef.current.filter(Boolean);
 
     switch (section) {
       case 0:
@@ -108,185 +131,193 @@ export default function QuantumCore({ section }: { section: number }) {
           .to(coreRef.current, { scale: 1, opacity: 1 }, 0)
           .to(ring1Ref.current, { rotateX: 75, rotateZ: 0, scale: 1 }, 0)
           .to(ring2Ref.current, { rotateX: 45, rotateZ: 30, scale: 1 }, 0)
-          .to(ring3Ref.current, { rotateX: 0, rotateZ: -20, scale: 1 }, 0);
+          .to(ring3Ref.current, { rotateX: 0, rotateZ: -20, scale: 1 }, 0)
+          .to(coinEls, { scale: 1, opacity: 0.85, duration: 1.2, stagger: 0.02 }, 0);
         break;
       case 1:
-        tl.to(wrapperRef.current, { x: "-20vw", scale: 0.9, rotateY: 15 }, 0)
+        tl.to(wrapperRef.current, { x: isMobile ? "-10vw" : "-20vw", scale: 0.9, rotateY: isMobile ? 8 : 15 }, 0)
           .to(coreRef.current, { scale: 0.7, opacity: 0.9 }, 0)
           .to(ring1Ref.current, { rotateX: 90, rotateZ: 45, scale: 1.3, y: -40 }, 0)
           .to(ring2Ref.current, { rotateX: 0, rotateZ: 90, scale: 1.1, y: 0 }, 0)
-          .to(ring3Ref.current, { rotateX: 60, rotateZ: -60, scale: 0.9, y: 40 }, 0);
+          .to(ring3Ref.current, { rotateX: 60, rotateZ: -60, scale: 0.9, y: 40 }, 0)
+          .to(coinEls, { scale: 0.75, opacity: 0.6, duration: 1.2, stagger: 0.02 }, 0);
         break;
       case 2:
         tl.to(wrapperRef.current, { x: 0, scale: 0.85, rotateY: 0 }, 0)
           .to(coreRef.current, { scale: 0.5, opacity: 0.6 }, 0)
           .to(ring1Ref.current, { rotateX: 0, rotateZ: 0, scale: 1.5, opacity: 0.3 }, 0)
           .to(ring2Ref.current, { rotateX: 0, rotateZ: 30, scale: 1.2, opacity: 0.5 }, 0)
-          .to(ring3Ref.current, { rotateX: 0, rotateZ: -15, scale: 1, opacity: 0.7 }, 0);
+          .to(ring3Ref.current, { rotateX: 0, rotateZ: -15, scale: 1, opacity: 0.7 }, 0)
+          .to(coinEls, { scale: 0.35, opacity: 0.15, duration: 1.2, stagger: 0.02 }, 0);
         break;
       case 3:
-        tl.to(wrapperRef.current, { x: 0, scale: 1.15, rotateY: 0 }, 0)
-          .to(coreRef.current, { scale: 1.3, opacity: 1 }, 0)
+        tl.to(wrapperRef.current, { x: 0, scale: isMobile ? 1.05 : 1.15, rotateY: 0 }, 0)
+          .to(coreRef.current, { scale: isMobile ? 1.1 : 1.3, opacity: 1 }, 0)
           .to(ring1Ref.current, { rotateX: 80, rotateZ: 180, scale: 1.2 }, 0)
           .to(ring2Ref.current, { rotateX: 50, rotateZ: -180, scale: 1.1 }, 0)
-          .to(ring3Ref.current, { rotateX: 20, rotateZ: 360, scale: 1 }, 0);
+          .to(ring3Ref.current, { rotateX: 20, rotateZ: 360, scale: 1 }, 0)
+          .to(coinEls, { scale: isMobile ? 1.05 : 1.2, opacity: 1, duration: 1.2, stagger: 0.02 }, 0);
         break;
     }
-  }, [section]);
+  }, [section, isMobile]);
 
   // Animation loop — particles + orbiting coins
+  const animate = useCallback(() => {
+    const time = Date.now();
+    const w = 400;
+    const h = 400;
+    const cx = w / 2;
+    const cy = h / 2;
+
+    // Animate particles
+    const positions = particles.map((p, i) => {
+      const t = time * p.speed + p.angle;
+      let r = p.radius;
+
+      if (section === 1) r += Math.sin(t * 3) * 20;
+      if (section === 2) r = (isMobile ? 30 : 60) + (i % 5) * (isMobile ? 12 : 25);
+      if (section === 3) r += Math.sin(time * 0.005 + i) * 30;
+
+      const x = cx + Math.cos(t) * r;
+      const y = cy + Math.sin(t) * r * 0.6 + p.yOffset;
+
+      const el = particlesRef.current[i];
+      if (el) {
+        el.style.transform = `translate(${x - cx}px, ${y - cy}px)`;
+        el.style.opacity = section === 2 && i > (isMobile ? 6 : 12) ? "0.2" : "0.8";
+      }
+
+      return { x, y, size: p.size };
+    });
+
+    // SVG connection lines
+    let pathData = "";
+    for (let i = 0; i < positions.length; i++) {
+      for (let j = i + 1; j < positions.length; j++) {
+        const dx = positions[i].x - positions[j].x;
+        const dy = positions[i].y - positions[j].y;
+        const dist = Math.sqrt(dx * dx + dy * dy);
+
+        const threshold = section === 3 ? 120 : section === 1 ? 80 : 60;
+        if (dist < threshold) {
+          pathData += `M${positions[i].x},${positions[i].y} L${positions[j].x},${positions[j].y} `;
+        }
+      }
+    }
+
+    const pathEl = svgRef.current?.querySelector("path");
+    if (pathEl) {
+      pathEl.setAttribute("d", pathData);
+      pathEl.setAttribute("stroke", colorDim);
+      pathEl.setAttribute("stroke-width", section === 3 ? "1.5" : "0.8");
+    }
+
+    // Animate orbiting coins — luxury 3D orbit
+    orbitingCoins.forEach((coin, i) => {
+      const el = coinsRef.current[i];
+      if (!el) return;
+
+      const orbitTime = time * coin.speed + coin.startAngle;
+      
+      // 3D orbit calculation
+      const x = Math.cos(orbitTime) * coin.radius;
+      const z = Math.sin(orbitTime) * coin.radius;
+      const y = coin.yOffset + Math.sin(orbitTime * 0.5) * (isMobile ? 12 : 20);
+      
+      // Scale & opacity based on z-depth
+      const scale = 0.65 + ((z + coin.radius) / (coin.radius * 2)) * 0.7;
+      const opacity = 0.35 + ((z + coin.radius) / (coin.radius * 2)) * 0.65;
+      
+      // 3D rotation
+      const rotateY = orbitTime * (180 / Math.PI) + coin.tilt;
+      const rotateX = Math.sin(orbitTime) * (isMobile ? 6 : 10);
+
+      el.style.transform = `
+        translate3d(${x}px, ${y}px, ${z}px) 
+        scale(${scale}) 
+        rotateY(${rotateY}deg) 
+        rotateX(${rotateX}deg)
+      `;
+      el.style.opacity = String(opacity);
+      el.style.zIndex = z > 0 ? "10" : "1";
+    });
+  }, [particles, orbitingCoins, section, colorDim, isMobile]);
+
   useEffect(() => {
     let raf: number;
-    let time = 0;
-
-    const animate = () => {
-      time += 16; // ~60fps
-      const w = 400;
-      const h = 400;
-      const cx = w / 2;
-      const cy = h / 2;
-
-      // Animate particles (existing)
-      const positions = particles.map((p, i) => {
-        const t = time * p.speed + p.angle;
-        let r = p.radius;
-
-        if (section === 1) r += Math.sin(t * 3) * 20;
-        if (section === 2) r = 60 + (i % 5) * 25;
-        if (section === 3) r += Math.sin(time * 0.005 + i) * 30;
-
-        const x = cx + Math.cos(t) * r;
-        const y = cy + Math.sin(t) * r * 0.6 + p.yOffset;
-
-        const el = particlesRef.current[i];
-        if (el) {
-          el.style.transform = `translate(${x - cx}px, ${y - cy}px)`;
-          el.style.opacity = section === 2 && i > 12 ? "0.2" : "0.8";
-        }
-
-        return { x, y, size: p.size };
-      });
-
-      // SVG connection lines (existing)
-      let pathData = "";
-      for (let i = 0; i < positions.length; i++) {
-        for (let j = i + 1; j < positions.length; j++) {
-          const dx = positions[i].x - positions[j].x;
-          const dy = positions[i].y - positions[j].y;
-          const dist = Math.sqrt(dx * dx + dy * dy);
-
-          const threshold = section === 3 ? 120 : section === 1 ? 80 : 60;
-          if (dist < threshold) {
-            pathData += `M${positions[i].x},${positions[i].y} L${positions[j].x},${positions[j].y} `;
-          }
-        }
-      }
-
-      const pathEl = svgRef.current?.querySelector("path");
-      if (pathEl) {
-        pathEl.setAttribute("d", pathData);
-        pathEl.setAttribute("stroke", colorDim);
-        pathEl.setAttribute("stroke-width", section === 3 ? "1.5" : "0.8");
-      }
-
-      // Animate orbiting coins — luxury 3D orbit
-      orbitingCoins.forEach((coin, i) => {
-        const el = coinsRef.current[i];
-        if (!el) return;
-
-        const orbitTime = time * coin.speed + coin.startAngle;
-        
-        // 3D orbit calculation
-        const x = Math.cos(orbitTime) * coin.radius;
-        const z = Math.sin(orbitTime) * coin.radius; // depth
-        const y = coin.yOffset + Math.sin(orbitTime * 0.5) * 20; // gentle vertical wave
-        
-        // Scale based on z-depth (closer = bigger)
-        const scale = 0.7 + ((z + coin.radius) / (coin.radius * 2)) * 0.6;
-        const opacity = 0.4 + ((z + coin.radius) / (coin.radius * 2)) * 0.6;
-        
-        // 3D tilt rotation
-        const rotateY = orbitTime * (180 / Math.PI) + coin.tilt;
-        const rotateX = Math.sin(orbitTime) * 10;
-
-        el.style.transform = `
-          translate3d(${x}px, ${y}px, ${z}px) 
-          scale(${scale}) 
-          rotateY(${rotateY}deg) 
-          rotateX(${rotateX}deg)
-        `;
-        el.style.opacity = String(opacity);
-        el.style.zIndex = z > 0 ? "10" : "1"; // closer coins on top
-      });
-
-      raf = requestAnimationFrame(animate);
+    const loop = () => {
+      animate();
+      raf = requestAnimationFrame(loop);
     };
-
-    raf = requestAnimationFrame(animate);
+    raf = requestAnimationFrame(loop);
     return () => cancelAnimationFrame(raf);
-  }, [particles, orbitingCoins, section, colorDim]);
+  }, [animate]);
 
   return (
     <div className="fixed inset-0 z-0 flex items-center justify-center pointer-events-none perspective-[1000px]">
-      {/* Orbiting Coins Layer — integrated with orbs */}
-      <div className="absolute inset-0 flex items-center justify-center" style={{ transformStyle: "preserve-3d" }}>
-        {orbitingCoins.map((coin, i) => (
-          <div
-            key={`orbit-coin-${i}`}
-            ref={(el) => { if (el) coinsRef.current[i] = el; }}
-            className="absolute"
-            style={{
-              width: coin.size,
-              height: coin.size,
-              transformStyle: "preserve-3d",
-              willChange: "transform",
-              transition: "none",
-            }}
-          >
-            <div
-              className="w-full h-full rounded-full"
-              style={{
-                background: `radial-gradient(circle at 30% 30%, rgba(255,255,255,0.9), rgba(255,255,255,0.1) 50%, transparent 70%)`,
-                boxShadow: `
-                  0 0 ${coin.size * 0.8}px ${coin.glowColor},
-                  0 0 ${coin.size * 1.5}px ${coin.glowColor},
-                  inset 0 0 ${coin.size * 0.3}px rgba(255,255,255,0.2)
-                `,
-                backdropFilter: "blur(1px)",
-              }}
-            >
-              <img
-                src={coin.path}
-                alt={coin.name}
-                className="w-full h-full object-contain rounded-full"
-                style={{
-                  filter: "brightness(1.2) contrast(1.1)",
-                }}
-                draggable={false}
-              />
-            </div>
-            {/* Reflection/gloss overlay */}
-            <div
-              className="absolute inset-0 rounded-full pointer-events-none"
-              style={{
-                background: "linear-gradient(135deg, rgba(255,255,255,0.3) 0%, transparent 50%, rgba(255,255,255,0.1) 100%)",
-              }}
-            />
-          </div>
-        ))}
-      </div>
-
       <div
         ref={wrapperRef}
         className="relative transition-none"
         style={{ 
-          width: "clamp(260px, 80vw, 400px)", 
-          height: "clamp(260px, 80vw, 400px)", 
+          width: isMobile ? "clamp(200px, 70vw, 320px)" : "clamp(260px, 80vw, 400px)", 
+          height: isMobile ? "clamp(200px, 70vw, 320px)" : "clamp(260px, 80vw, 400px)", 
           transformStyle: "preserve-3d", 
           willChange: "transform", 
           backfaceVisibility: "hidden" 
         }}
       >
+        {/* Orbiting Coins — inside wrapper so they follow GSAP transforms */}
+        <div className="absolute inset-0 flex items-center justify-center" style={{ transformStyle: "preserve-3d" }}>
+          {orbitingCoins.map((coin, i) => (
+            <div
+              key={`orbit-coin-${i}`}
+              ref={(el) => { if (el) coinsRef.current[i] = el; }}
+              className="absolute"
+              style={{
+                width: coin.size,
+                height: coin.size,
+                transformStyle: "preserve-3d",
+                willChange: "transform, opacity",
+              }}
+            >
+              <div
+                className="w-full h-full rounded-full relative overflow-hidden"
+                style={{
+                  boxShadow: `
+                    0 0 ${coin.size * 0.6}px ${coin.glowColor},
+                    0 0 ${coin.size * 1.2}px ${coin.glowColor},
+                    inset 0 0 ${coin.size * 0.2}px rgba(255,255,255,0.15)
+                  `,
+                }}
+              >
+                <img
+                  src={coin.path}
+                  alt={coin.name}
+                  className="w-full h-full object-contain rounded-full"
+                  style={{
+                    filter: "brightness(1.15) contrast(1.05) saturate(1.1)",
+                  }}
+                  draggable={false}
+                />
+                {/* Luxury gloss overlay */}
+                <div
+                  className="absolute inset-0 rounded-full pointer-events-none"
+                  style={{
+                    background: "linear-gradient(135deg, rgba(255,255,255,0.5) 0%, rgba(255,255,255,0.1) 40%, transparent 60%, rgba(255,255,255,0.2) 100%)",
+                  }}
+                />
+                {/* Bottom reflection */}
+                <div
+                  className="absolute bottom-0 left-0 right-0 h-1/3 rounded-b-full pointer-events-none"
+                  style={{
+                    background: "linear-gradient(to top, rgba(255,255,255,0.15), transparent)",
+                  }}
+                />
+              </div>
+            </div>
+          ))}
+        </div>
+
         <svg
           ref={svgRef}
           className="absolute inset-0 w-full h-full pointer-events-none"
@@ -309,12 +340,12 @@ export default function QuantumCore({ section }: { section: number }) {
           <div
             className="absolute rounded-full border transition-colors duration-700"
             style={{
-              width: "clamp(180px, 80%, 320px)",
-              height: "clamp(180px, 80%, 320px)",
+              width: isMobile ? "clamp(140px, 75%, 260px)" : "clamp(180px, 80%, 320px)",
+              height: isMobile ? "clamp(140px, 75%, 260px)" : "clamp(180px, 80%, 320px)",
               borderColor: colorDim,
               borderWidth: "1px",
               borderStyle: section === 2 ? "dashed" : "solid",
-              boxShadow: `0 0 40px ${colorDim}`,
+              boxShadow: `0 0 ${isMobile ? 25 : 40}px ${colorDim}`,
             }}
           />
           {[0, 120, 240].map((deg, i) => (
@@ -323,12 +354,12 @@ export default function QuantumCore({ section }: { section: number }) {
               className="absolute w-2 h-2 rounded-full transition-colors duration-700"
               style={{
                 backgroundColor: color,
-                boxShadow: `0 0 12px ${color}`,
+                boxShadow: `0 0 ${isMobile ? 8 : 12}px ${color}`,
                 top: "50%",
                 left: "50%",
                 marginLeft: "-4px",
                 marginTop: "-4px",
-                transform: `rotate(${deg}deg) translateX(160px)`,
+                transform: `rotate(${deg}deg) translateX(${isMobile ? 130 : 160}px)`,
                 animation: `orbitRing3 ${10 + i * 2}s linear infinite`,
               }}
             />
@@ -343,12 +374,12 @@ export default function QuantumCore({ section }: { section: number }) {
           <div
             className="absolute rounded-full border transition-colors duration-700"
             style={{
-              width: "clamp(135px, 60%, 240px)",
-              height: "clamp(135px, 60%, 240px)",
+              width: isMobile ? "clamp(100px, 55%, 190px)" : "clamp(135px, 60%, 240px)",
+              height: isMobile ? "clamp(100px, 55%, 190px)" : "clamp(135px, 60%, 240px)",
               borderColor: color,
               borderWidth: "2px",
               opacity: 0.4,
-              boxShadow: `inset 0 0 30px ${colorDim}`,
+              boxShadow: `inset 0 0 ${isMobile ? 20 : 30}px ${colorDim}`,
             }}
           />
           {Array.from({ length: 6 }).map((_, i) => {
@@ -358,8 +389,8 @@ export default function QuantumCore({ section }: { section: number }) {
                 key={`r2-${i}`}
                 className="absolute flex flex-col items-center gap-1 transition-opacity duration-500"
                 style={{
-                  top: `${50 + 38 * Math.sin(angle)}%`,
-                  left: `${50 + 38 * Math.cos(angle)}%`,
+                  top: `${50 + (isMobile ? 32 : 38) * Math.sin(angle)}%`,
+                  left: `${50 + (isMobile ? 32 : 38) * Math.cos(angle)}%`,
                   transform: "translate(-50%, -50%)",
                   opacity: section === 1 ? 1 : 0.3,
                 }}
@@ -383,8 +414,8 @@ export default function QuantumCore({ section }: { section: number }) {
           <div
             className="absolute rounded-full border transition-colors duration-700"
             style={{
-              width: "clamp(90px, 40%, 160px)",
-              height: "clamp(90px, 40%, 160px)",
+              width: isMobile ? "clamp(70px, 35%, 130px)" : "clamp(90px, 40%, 160px)",
+              height: isMobile ? "clamp(70px, 35%, 130px)" : "clamp(90px, 40%, 160px)",
               borderColor: color,
               borderWidth: "1px",
               opacity: 0.6,
@@ -416,7 +447,11 @@ export default function QuantumCore({ section }: { section: number }) {
           className="absolute inset-0 flex items-center justify-center"
           style={{ zIndex: 10 }}
         >
-          <OrbCore color={color} section={section} size={Math.min(220, typeof window !== "undefined" ? window.innerWidth * 0.55 : 220)} />
+          <OrbCore 
+            color={color} 
+            section={section} 
+            size={Math.min(isMobile ? 160 : 220, typeof window !== "undefined" ? window.innerWidth * (isMobile ? 0.45 : 0.55) : (isMobile ? 160 : 220))} 
+          />
           {section === 1 && state.active_signal_count > 0 && (
             <div
               className="absolute -top-2 -right-2 w-6 h-6 rounded-full flex items-center justify-center text-[9px] font-bold font-mono text-black"
@@ -436,7 +471,7 @@ export default function QuantumCore({ section }: { section: number }) {
             className="absolute top-1/2 left-1/2 rounded-full transition-colors duration-700 pointer-events-none"
             style={{
               backgroundColor: i % 4 === 0 ? color : "rgba(255,255,255,0.5)",
-              boxShadow: i % 4 === 0 ? `0 0 8px ${color}` : "none",
+              boxShadow: i % 4 === 0 ? `0 0 ${isMobile ? 5 : 8}px ${color}` : "none",
               marginLeft: "-2px",
               marginTop: "-2px",
               width: `${p.size}px`,
@@ -447,15 +482,15 @@ export default function QuantumCore({ section }: { section: number }) {
 
         {section === 1 && (
           <div className="absolute inset-0 pointer-events-none">
-            {Array.from({ length: 5 }).map((_, i) => (
+            {Array.from({ length: isMobile ? 3 : 5 }).map((_, i) => (
               <div
                 key={`candle-${i}`}
                 className="absolute w-[2px] rounded-full transition-colors duration-700"
                 style={{
                   height: `${15 + Math.random() * 20}px`,
                   backgroundColor: i % 2 === 0 ? "rgba(74,222,128,0.4)" : "rgba(248,113,113,0.4)",
-                  top: `${20 + i * 15}%`,
-                  left: `${10 + i * 20}%`,
+                  top: `${20 + i * (isMobile ? 20 : 15)}%`,
+                  left: `${10 + i * (isMobile ? 25 : 20)}%`,
                   animation: `float ${3 + i}s ease-in-out ${i * 0.5}s infinite alternate`,
                 }}
               />
@@ -465,7 +500,7 @@ export default function QuantumCore({ section }: { section: number }) {
 
         {section === 2 && (
           <div className="absolute inset-0 flex items-center justify-center pointer-events-none opacity-30">
-            <svg width="200" height="200" viewBox="0 0 200 200" className="animate-[spin_60s_linear_infinite]">
+            <svg width={isMobile ? 150 : 200} height={isMobile ? 150 : 200} viewBox="0 0 200 200" className="animate-[spin_60s_linear_infinite]">
               <defs>
                 <pattern id="hex" width="28" height="48" patternUnits="userSpaceOnUse">
                   <path d="M14 0 L28 8 L28 24 L14 32 L0 24 L0 8 Z" fill="none" stroke={colorDim} strokeWidth="0.5" />
@@ -478,14 +513,14 @@ export default function QuantumCore({ section }: { section: number }) {
 
         {section === 3 && (
           <div className="absolute inset-0 pointer-events-none">
-            {Array.from({ length: 8 }).map((_, i) => {
-              const angle = (i / 8) * Math.PI * 2;
+            {Array.from({ length: isMobile ? 6 : 8 }).map((_, i) => {
+              const angle = (i / (isMobile ? 6 : 8)) * Math.PI * 2;
               return (
                 <div
                   key={`burst-${i}`}
                   className="absolute top-1/2 left-1/2 h-[1px] origin-left transition-colors duration-700"
                   style={{
-                    width: "180px",
+                    width: isMobile ? "140px" : "180px",
                     background: `linear-gradient(90deg, ${color}, transparent)`,
                     transform: `rotate(${angle}rad)`,
                     opacity: 0.3,
@@ -500,8 +535,8 @@ export default function QuantumCore({ section }: { section: number }) {
 
       <style jsx>{`
         @keyframes orbitRing3 {
-          from { transform: rotate(0deg) translateX(160px) rotate(0deg); }
-          to { transform: rotate(360deg) translateX(160px) rotate(-360deg); }
+          from { transform: rotate(0deg) translateX(${isMobile ? 130 : 160}px) rotate(0deg); }
+          to { transform: rotate(360deg) translateX(${isMobile ? 130 : 160}px) rotate(-360deg); }
         }
       `}</style>
     </div>
