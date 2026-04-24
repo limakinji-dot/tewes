@@ -8,7 +8,6 @@ import { useGSAP } from "@gsap/react";
 import { useLenis } from "@/components/SmoothScroll";
 import { useAuth } from "@/hooks/useAuthContext";
 import AuroraBackground from "@/components/background/AuroraBackground";
-import CryptoCoinBackground from "@/components/background/CryptoCoinBackground";
 import QuantumCore from "@/components/background/QuantumCore";
 import LaTeXOverlay from "@/components/ui/LaTeXOverlay";
 import Preloader from "@/components/ui/Preloader";
