@@ -28,7 +28,6 @@ interface FloatingCoin {
   duration: number;
   delay: number;
   opacity: number;
-  blur: number;
   driftX: number;
   driftY: number;
 }
@@ -41,13 +40,12 @@ export default function CryptoCoinBackground() {
         ...coin,
         x: Math.random() * 100,
         y: Math.random() * 100,
-        size: 24 + Math.random() * 56,
-        duration: 12 + Math.random() * 20,
-        delay: Math.random() * -30,
-        opacity: 0.04 + Math.random() * 0.08,
-        blur: Math.random() > 0.7 ? 2 : 0,
-        driftX: (Math.random() - 0.5) * 120,
-        driftY: (Math.random() - 0.5) * 120,
+        size: 32 + Math.random() * 64, // lebih besar: 32px - 96px
+        duration: 14 + Math.random() * 18,
+        delay: Math.random() * -20,
+        opacity: 0.18 + Math.random() * 0.32, // 18% - 50% (kelihatan jelas di dark bg)
+        driftX: (Math.random() - 0.5) * 100,
+        driftY: (Math.random() - 0.5) * 100,
       };
     });
   }, []);
@@ -64,13 +62,13 @@ export default function CryptoCoinBackground() {
             width: coin.size,
             height: coin.size,
             opacity: coin.opacity,
-            filter: coin.blur ? `blur(${coin.blur}px)` : undefined,
+            willChange: "transform",
           }}
           animate={{
             y: [0, coin.driftY, 0],
             x: [0, coin.driftX, 0],
             rotate: [0, 360],
-            scale: [1, 1.15, 0.9, 1],
+            scale: [1, 1.1, 0.95, 1],
           }}
           transition={{
             duration: coin.duration,
@@ -79,15 +77,13 @@ export default function CryptoCoinBackground() {
             ease: "easeInOut",
           }}
         >
-          {/* Pakai <img> native biar pasti muncul */}
           <img
             src={coin.path}
             alt={coin.name}
             className="w-full h-full object-contain"
             style={{
-              filter: `drop-shadow(0 0 ${coin.size * 0.3}px rgba(255,255,255,0.08))`,
+              filter: `drop-shadow(0 0 ${coin.size * 0.4}px rgba(255,255,255,0.2))`,
             }}
-            loading="lazy"
             draggable={false}
           />
         </motion.div>
