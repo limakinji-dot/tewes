@@ -97,8 +97,8 @@ export default function HomeContent() {
       {showPreloader && <Preloader onComplete={handlePreloaderComplete} />}
 
       <main ref={containerRef} className="relative bg-[#030303]">
-        <CryptoCoinBackground />
         <AuroraBackground />
+        <CryptoCoinBackground />
         <QuantumCore section={section} />
         <LaTeXOverlay />
 
