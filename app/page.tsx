@@ -42,7 +42,6 @@ export default function Home() {
 
   return (
     <>
-      <CustomCursor />
       {!loaded && <Preloader onComplete={handlePreloaderComplete} />}
 
       <main ref={containerRef} className="relative bg-[#030303]">
