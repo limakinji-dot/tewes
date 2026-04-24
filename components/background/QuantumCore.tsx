@@ -135,8 +135,8 @@ export default function QuantumCore({ section }: { section: number }) {
           .to(coinEls, { scale: 1, opacity: 0.85, duration: 1.2, stagger: 0.02 }, 0);
         break;
       case 1:
-        // Mobile: don't shift too far left, keep more centered
-        tl.to(wrapperRef.current, { x: isMobile ? "-5vw" : "-20vw", scale: 0.9, rotateY: isMobile ? 5 : 15 }, 0)
+        // Mobile: shift much further left to feel the movement
+        tl.to(wrapperRef.current, { x: isMobile ? "-35vw" : "-20vw", scale: 0.9, rotateY: isMobile ? 12 : 15 }, 0)
           .to(coreRef.current, { scale: 0.7, opacity: 0.9 }, 0)
           .to(ring1Ref.current, { rotateX: 90, rotateZ: 45, scale: 1.3, y: -40 }, 0)
           .to(ring2Ref.current, { rotateX: 0, rotateZ: 90, scale: 1.1, y: 0 }, 0)
