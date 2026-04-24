@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
-import { formatPrice } from "@/lib/utils";
+import { formatPrice, cn } from "@/lib/utils";
 import type { Signal } from "@/lib/types";
 
 export default function TradeHistoryTable() {
@@ -21,25 +21,22 @@ export default function TradeHistoryTable() {
       <div className="absolute top-0 left-0 right-0 h-16 bg-gradient-to-b from-[#030303] to-transparent z-10 pointer-events-none" />
       <div className="absolute bottom-0 left-0 right-0 h-16 bg-gradient-to-t from-[#030303] to-transparent z-10 pointer-events-none" />
 
-      <div className="overflow-hidden rounded-2xl glass">
-        <table className="w-full text-left border-collapse">
+      {/* Horizontal scroll wrapper for mobile */}
+      <div className="overflow-x-auto rounded-2xl glass -webkit-overflow-scrolling-touch">
+        <table className="w-full min-w-[480px] text-left border-collapse">
           <thead>
             <tr className="border-b border-white/5">
-              <th className="px-6 py-4 text-[10px] font-mono tracking-widest text-white/30 font-normal">
-                PAIR
-              </th>
-              <th className="px-6 py-4 text-[10px] font-mono tracking-widest text-white/30 font-normal">
-                DIR
-              </th>
-              <th className="px-6 py-4 text-[10px] font-mono tracking-widest text-white/30 font-normal">
-                ENTRY
-              </th>
-              <th className="px-6 py-4 text-[10px] font-mono tracking-widest text-white/30 font-normal">
-                CLOSE
-              </th>
-              <th className="px-6 py-4 text-[10px] font-mono tracking-widest text-white/30 font-normal text-right">
-                PnL %
-              </th>
+              {["PAIR", "DIR", "ENTRY", "CLOSE", "PnL %"].map((h, i) => (
+                <th
+                  key={h}
+                  className={cn(
+                    "px-4 sm:px-6 py-3 sm:py-4 text-[10px] font-mono tracking-widest text-white/30 font-normal whitespace-nowrap",
+                    i === 4 && "text-right"
+                  )}
+                >
+                  {h}
+                </th>
+              ))}
             </tr>
           </thead>
           <tbody>
@@ -49,34 +46,34 @@ export default function TradeHistoryTable() {
                 initial={{ opacity: 0, y: 10 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
-                transition={{ delay: i * 0.05 }}
+                transition={{ delay: i * 0.04 }}
                 className="border-b border-white/[0.03] hover:bg-white/[0.02] transition-colors"
               >
-                <td className="px-6 py-4 text-xs font-mono text-white/80">
+                <td className="px-4 sm:px-6 py-3 sm:py-4 text-xs font-mono text-white/80 whitespace-nowrap">
                   {sig.symbol.replace("_USDT", "")}
                 </td>
-                <td className="px-6 py-4">
+                <td className="px-4 sm:px-6 py-3 sm:py-4">
                   <span
                     className={cn(
-                      "text-[10px] font-bold px-2 py-0.5 rounded",
+                      "text-[10px] font-bold px-2 py-0.5 rounded whitespace-nowrap",
                       sig.decision === "LONG"
-                        ? "bg-accent-profit/10 text-accent-profit"
-                        : "bg-accent-loss/10 text-accent-loss"
+                        ? "bg-[#4ade80]/10 text-[#4ade80]"
+                        : "bg-[#f87171]/10 text-[#f87171]"
                     )}
                   >
                     {sig.decision}
                   </span>
                 </td>
-                <td className="px-6 py-4 text-xs font-mono text-white/50">
+                <td className="px-4 sm:px-6 py-3 sm:py-4 text-xs font-mono text-white/50 whitespace-nowrap">
                   ${formatPrice(sig.entry)}
                 </td>
-                <td className="px-6 py-4 text-xs font-mono text-white/50">
+                <td className="px-4 sm:px-6 py-3 sm:py-4 text-xs font-mono text-white/50 whitespace-nowrap">
                   ${formatPrice(sig.closed_price)}
                 </td>
                 <td
                   className={cn(
-                    "px-6 py-4 text-xs font-mono text-right font-bold",
-                    (sig.pnl_pct || 0) >= 0 ? "text-accent-profit" : "text-accent-loss"
+                    "px-4 sm:px-6 py-3 sm:py-4 text-xs font-mono text-right font-bold whitespace-nowrap",
+                    (sig.pnl_pct || 0) >= 0 ? "text-[#4ade80]" : "text-[#f87171]"
                   )}
                 >
                   {(sig.pnl_pct || 0) >= 0 ? "+" : ""}
@@ -90,5 +87,3 @@ export default function TradeHistoryTable() {
     </div>
   );
 }
-
-import { cn } from "@/lib/utils";
