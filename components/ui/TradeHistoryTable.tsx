@@ -5,24 +5,31 @@ import { motion } from "framer-motion";
 import { formatPrice, cn } from "@/lib/utils";
 import type { Signal } from "@/lib/types";
 
-export default function TradeHistoryTable() {
+interface TradeHistoryTableProps {
+  limit?: number;
+  compact?: boolean;
+}
+
+export default function TradeHistoryTable({ limit = 20, compact = false }: TradeHistoryTableProps) {
   const [history, setHistory] = useState<Signal[]>([]);
 
   useEffect(() => {
-    fetch("/api/history/signals?limit=20")
+    fetch(`/api/history/signals?limit=${limit}`)
       .then((r) => r.json())
       .then((data) => setHistory(data.data || []))
       .catch(() => {});
-  }, []);
+  }, [limit]);
 
   return (
     <div className="relative">
-      {/* Fade overlays */}
-      <div className="absolute top-0 left-0 right-0 h-16 bg-gradient-to-b from-[#030303] to-transparent z-10 pointer-events-none" />
-      <div className="absolute bottom-0 left-0 right-0 h-16 bg-gradient-to-t from-[#030303] to-transparent z-10 pointer-events-none" />
+      {!compact && (
+        <>
+          <div className="absolute top-0 left-0 right-0 h-16 bg-gradient-to-b from-[#030303] to-transparent z-10 pointer-events-none" />
+          <div className="absolute bottom-0 left-0 right-0 h-16 bg-gradient-to-t from-[#030303] to-transparent z-10 pointer-events-none" />
+        </>
+      )}
 
-      {/* Horizontal scroll wrapper for mobile */}
-      <div className="overflow-x-auto rounded-2xl glass -webkit-overflow-scrolling-touch">
+      <div className={cn("overflow-x-auto rounded-2xl glass", compact && "rounded-xl")}>
         <table className="w-full min-w-[480px] text-left border-collapse">
           <thead>
             <tr className="border-b border-white/5">
@@ -30,8 +37,9 @@ export default function TradeHistoryTable() {
                 <th
                   key={h}
                   className={cn(
-                    "px-4 sm:px-6 py-3 sm:py-4 text-[10px] font-mono tracking-widest text-white/30 font-normal whitespace-nowrap",
-                    i === 4 && "text-right"
+                    "px-4 sm:px-6 text-[10px] font-mono tracking-widest text-white/30 font-normal whitespace-nowrap",
+                    i === 4 && "text-right",
+                    compact ? "py-3" : "py-4"
                   )}
                 >
                   {h}
