@@ -98,7 +98,6 @@ export default function HomeContent() {
 
       <main ref={containerRef} className="relative bg-[#030303]">
         <AuroraBackground />
-        <CryptoCoinBackground />
         <QuantumCore section={section} />
         <LaTeXOverlay />
 
