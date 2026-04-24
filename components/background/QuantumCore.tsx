@@ -1,3 +1,4 @@
+// QuantumCore.tsx — full rewrite dengan integrated orbiting coins
 "use client";
 
 import { useRef, useEffect, useMemo } from "react";
@@ -5,13 +6,31 @@ import { useTrading } from "@/hooks/useTradingContext";
 import gsap from "gsap";
 import OrbCore from "@/components/background/OrbCore";
 
-interface Particle {
-  angle: number;
-  radius: number;
-  speed: number;
+const COINS = [
+  { id: "bitcoin", name: "BTC", path: "/images/coins/bitcoin.png" },
+  { id: "ethereum", name: "ETH", path: "/images/coins/ethereum.png" },
+  { id: "solana", name: "SOL", path: "/images/coins/solana.png" },
+  { id: "binancecoin", name: "BNB", path: "/images/coins/bnb.png" },
+  { id: "dogecoin", name: "DOGE", path: "/images/coins/dogecoin.png" },
+  { id: "cardano", name: "ADA", path: "/images/coins/cardano.png" },
+  { id: "tron", name: "TRX", path: "/images/coins/tron.png" },
+  { id: "chainlink", name: "LINK", path: "/images/coins/chainlink.png" },
+  { id: "polkadot", name: "DOT", path: "/images/coins/polkadot.png" },
+  { id: "litecoin", name: "LTC", path: "/images/coins/litecoin.png" },
+  { id: "avalanche", name: "AVAX", path: "/images/coins/avalanche.png" },
+];
+
+interface OrbitingCoin {
+  id: string;
+  name: string;
+  path: string;
+  radius: number;      // orbit radius
+  speed: number;       // orbit speed
+  startAngle: number;  // initial position
   size: number;
-  ring: number;
-  yOffset: number;
+  tilt: number;        // 3D tilt angle
+  yOffset: number;     // vertical oscillation
+  glowColor: string;
 }
 
 export default function QuantumCore({ section }: { section: number }) {
@@ -22,6 +41,7 @@ export default function QuantumCore({ section }: { section: number }) {
   const ring3Ref = useRef<HTMLDivElement>(null);
   const svgRef = useRef<SVGSVGElement>(null);
   const particlesRef = useRef<HTMLDivElement[]>([]);
+  const coinsRef = useRef<HTMLDivElement[]>([]);
   const { state, latestTheme } = useTrading();
 
   const color = useMemo(() => {
@@ -32,8 +52,37 @@ export default function QuantumCore({ section }: { section: number }) {
     return latestTheme === "profit" ? "rgba(74,222,128,0.2)" : latestTheme === "loss" ? "rgba(248,113,113,0.2)" : "rgba(96,165,250,0.2)";
   }, [latestTheme]);
 
-  const particles = useMemo<Particle[]>(() => {
-    const arr: Particle[] = [];
+  // Generate orbiting coins — luxury 3D orbit parameters
+  const orbitingCoins = useMemo<OrbitingCoin[]>(() => {
+    const glowColors = [
+      "rgba(212,168,71,0.4)",   // gold
+      "rgba(96,165,250,0.35)",  // blue  
+      "rgba(196,181,253,0.35)", // violet
+      "rgba(74,222,128,0.3)",   // green
+    ];
+    
+    return Array.from({ length: 16 }).map((_, i) => {
+      const coin = COINS[i % COINS.length];
+      const ringIndex = i % 3; // 0=outer, 1=mid, 2=inner
+      
+      const baseRadius = ringIndex === 0 ? 280 : ringIndex === 1 ? 200 : 140;
+      const radiusVariation = (Math.random() - 0.5) * 40;
+      
+      return {
+        ...coin,
+        radius: baseRadius + radiusVariation,
+        speed: 0.0003 + (Math.random() * 0.0004) + (ringIndex * 0.0002), // outer slower, inner faster
+        startAngle: (i / 16) * Math.PI * 2 + (Math.random() * 0.5),
+        size: 28 + Math.random() * 24, // 28px - 52px
+        tilt: (Math.random() - 0.5) * 30, // slight 3D tilt
+        yOffset: (Math.random() - 0.5) * 60,
+        glowColor: glowColors[i % glowColors.length],
+      };
+    });
+  }, []);
+
+  const particles = useMemo(() => {
+    const arr = [];
     for (let i = 0; i < 24; i++) {
       arr.push({
         angle: (i / 24) * Math.PI * 2,
@@ -47,6 +96,7 @@ export default function QuantumCore({ section }: { section: number }) {
     return arr;
   }, []);
 
+  // GSAP section animations for orbs
   useEffect(() => {
     if (!wrapperRef.current || !coreRef.current) return;
 
@@ -84,17 +134,19 @@ export default function QuantumCore({ section }: { section: number }) {
     }
   }, [section]);
 
+  // Animation loop — particles + orbiting coins
   useEffect(() => {
     let raf: number;
-    const svg = svgRef.current;
-    if (!svg) return;
+    let time = 0;
 
-    const animate = (time: number) => {
+    const animate = () => {
+      time += 16; // ~60fps
       const w = 400;
       const h = 400;
       const cx = w / 2;
       const cy = h / 2;
 
+      // Animate particles (existing)
       const positions = particles.map((p, i) => {
         const t = time * p.speed + p.angle;
         let r = p.radius;
@@ -115,6 +167,7 @@ export default function QuantumCore({ section }: { section: number }) {
         return { x, y, size: p.size };
       });
 
+      // SVG connection lines (existing)
       let pathData = "";
       for (let i = 0; i < positions.length; i++) {
         for (let j = i + 1; j < positions.length; j++) {
@@ -129,26 +182,110 @@ export default function QuantumCore({ section }: { section: number }) {
         }
       }
 
-      const pathEl = svg.querySelector("path");
+      const pathEl = svgRef.current?.querySelector("path");
       if (pathEl) {
         pathEl.setAttribute("d", pathData);
         pathEl.setAttribute("stroke", colorDim);
         pathEl.setAttribute("stroke-width", section === 3 ? "1.5" : "0.8");
       }
 
+      // Animate orbiting coins — luxury 3D orbit
+      orbitingCoins.forEach((coin, i) => {
+        const el = coinsRef.current[i];
+        if (!el) return;
+
+        const orbitTime = time * coin.speed + coin.startAngle;
+        
+        // 3D orbit calculation
+        const x = Math.cos(orbitTime) * coin.radius;
+        const z = Math.sin(orbitTime) * coin.radius; // depth
+        const y = coin.yOffset + Math.sin(orbitTime * 0.5) * 20; // gentle vertical wave
+        
+        // Scale based on z-depth (closer = bigger)
+        const scale = 0.7 + ((z + coin.radius) / (coin.radius * 2)) * 0.6;
+        const opacity = 0.4 + ((z + coin.radius) / (coin.radius * 2)) * 0.6;
+        
+        // 3D tilt rotation
+        const rotateY = orbitTime * (180 / Math.PI) + coin.tilt;
+        const rotateX = Math.sin(orbitTime) * 10;
+
+        el.style.transform = `
+          translate3d(${x}px, ${y}px, ${z}px) 
+          scale(${scale}) 
+          rotateY(${rotateY}deg) 
+          rotateX(${rotateX}deg)
+        `;
+        el.style.opacity = String(opacity);
+        el.style.zIndex = z > 0 ? "10" : "1"; // closer coins on top
+      });
+
       raf = requestAnimationFrame(animate);
     };
 
     raf = requestAnimationFrame(animate);
     return () => cancelAnimationFrame(raf);
-  }, [particles, section, colorDim]);
+  }, [particles, orbitingCoins, section, colorDim]);
 
   return (
     <div className="fixed inset-0 z-0 flex items-center justify-center pointer-events-none perspective-[1000px]">
+      {/* Orbiting Coins Layer — integrated with orbs */}
+      <div className="absolute inset-0 flex items-center justify-center" style={{ transformStyle: "preserve-3d" }}>
+        {orbitingCoins.map((coin, i) => (
+          <div
+            key={`orbit-coin-${i}`}
+            ref={(el) => { if (el) coinsRef.current[i] = el; }}
+            className="absolute"
+            style={{
+              width: coin.size,
+              height: coin.size,
+              transformStyle: "preserve-3d",
+              willChange: "transform",
+              transition: "none",
+            }}
+          >
+            <div
+              className="w-full h-full rounded-full"
+              style={{
+                background: `radial-gradient(circle at 30% 30%, rgba(255,255,255,0.9), rgba(255,255,255,0.1) 50%, transparent 70%)`,
+                boxShadow: `
+                  0 0 ${coin.size * 0.8}px ${coin.glowColor},
+                  0 0 ${coin.size * 1.5}px ${coin.glowColor},
+                  inset 0 0 ${coin.size * 0.3}px rgba(255,255,255,0.2)
+                `,
+                backdropFilter: "blur(1px)",
+              }}
+            >
+              <img
+                src={coin.path}
+                alt={coin.name}
+                className="w-full h-full object-contain rounded-full"
+                style={{
+                  filter: "brightness(1.2) contrast(1.1)",
+                }}
+                draggable={false}
+              />
+            </div>
+            {/* Reflection/gloss overlay */}
+            <div
+              className="absolute inset-0 rounded-full pointer-events-none"
+              style={{
+                background: "linear-gradient(135deg, rgba(255,255,255,0.3) 0%, transparent 50%, rgba(255,255,255,0.1) 100%)",
+              }}
+            />
+          </div>
+        ))}
+      </div>
+
       <div
         ref={wrapperRef}
         className="relative transition-none"
-        style={{ width: "clamp(260px, 80vw, 400px)", height: "clamp(260px, 80vw, 400px)", transformStyle: "preserve-3d", willChange: "transform", backfaceVisibility: "hidden" }}
+        style={{ 
+          width: "clamp(260px, 80vw, 400px)", 
+          height: "clamp(260px, 80vw, 400px)", 
+          transformStyle: "preserve-3d", 
+          willChange: "transform", 
+          backfaceVisibility: "hidden" 
+        }}
       >
         <svg
           ref={svgRef}
