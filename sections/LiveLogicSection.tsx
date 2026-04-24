@@ -4,6 +4,7 @@ import { useRef } from "react";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { useGSAP } from "@gsap/react";
+import Link from "next/link";
 import SignalFeed from "@/components/ui/SignalFeed";
 import GlassCard from "@/components/ui/GlassCard";
 
@@ -15,8 +16,6 @@ export default function LiveLogicSection() {
 
   useGSAP(() => {
     if (!contentRef.current) return;
-
-    // On mobile skip x-slide animation (too small for the effect)
     const isMobile = window.innerWidth < 768;
     gsap.fromTo(
       contentRef.current,
@@ -51,7 +50,27 @@ export default function LiveLogicSection() {
               Real-time AI analysis stream from Qwen multi-agent system
             </p>
           </div>
-          <SignalFeed />
+
+          {/* Preview: max 3 signals */}
+          <SignalFeed limit={3} compact />
+
+          {/* CTA to full page */}
+          <div className="mt-6 pt-5 border-t border-white/[0.06]">
+            <Link
+              href="/signals"
+              className="group flex items-center justify-between w-full px-5 py-3 rounded-xl glass hover:bg-white/[0.06] hover:border-white/15 transition-all duration-300"
+            >
+              <div className="flex items-center gap-3">
+                <span className="w-1.5 h-1.5 rounded-full bg-[#4ade80] animate-pulse" />
+                <span className="text-xs font-mono text-white/60 group-hover:text-white/90 transition-colors">
+                  View All Live Signals
+                </span>
+              </div>
+              <span className="text-white/30 group-hover:text-white/70 group-hover:translate-x-1 transition-all text-lg">
+                →
+              </span>
+            </Link>
+          </div>
         </GlassCard>
       </div>
     </section>
