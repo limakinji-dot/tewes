@@ -5,6 +5,7 @@ import "katex/dist/katex.min.css";
 import "./globals.css";
 import { TradingProvider } from "@/hooks/useTradingContext";
 import SmoothScroll from "@/components/SmoothScroll";
+import CustomCursor from "@/components/ui/CustomCursor";
 
 export const metadata: Metadata = {
   title: "Sonnetrade-AI",
@@ -19,6 +20,7 @@ export default function RootLayout({
   return (
     <html lang="en" className={`${GeistSans.variable} ${GeistMono.variable}`}>
       <body className="font-sans antialiased">
+        <CustomCursor />
         <TradingProvider>
           <SmoothScroll>{children}</SmoothScroll>
         </TradingProvider>
