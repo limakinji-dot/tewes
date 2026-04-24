@@ -7,8 +7,8 @@ import { TradingProvider } from "@/hooks/useTradingContext";
 import SmoothScroll from "@/components/SmoothScroll";
 
 export const metadata: Metadata = {
-  title: "Agent-X | Quantum Execution",
-  description: "Premium AI Auto Signal Trading Interface",
+  title: "Sonnetrade-AI",
+  description: "Premium AI Auto Signal Trading",
 };
 
 export default function RootLayout({
