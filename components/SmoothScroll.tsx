@@ -16,10 +16,10 @@ export default function SmoothScroll({ children }: { children: React.ReactNode }
 
   useEffect(() => {
     const lenisInstance = new Lenis({
-      duration: 1.6,
+      duration: 1.2,
       easing: (t: number) => 1 - Math.pow(1 - t, 4),
-      touchMultiplier: 1.8,
-      wheelMultiplier: 0.9,
+      touchMultiplier: 1.5,
+      wheelMultiplier: 0.8,
       infinite: false,
       syncTouch: false,
     });
@@ -29,15 +29,15 @@ export default function SmoothScroll({ children }: { children: React.ReactNode }
 
     lenisInstance.on("scroll", ScrollTrigger.update);
 
-    gsap.ticker.add((time) => {
+    const onTick = (time: number) => {
       lenisInstance.raf(time * 1000);
-    });
-
+    };
+    gsap.ticker.add(onTick);
     gsap.ticker.lagSmoothing(0);
 
     return () => {
+      gsap.ticker.remove(onTick);
       lenisInstance.destroy();
-      gsap.ticker.remove(lenisInstance.raf);
     };
   }, []);
 
