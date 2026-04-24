@@ -1,6 +1,8 @@
 "use client";
 
 import React, { createContext, useContext, useReducer, useEffect } from "react";
+import { useAuth } from "./useAuthContext";
+import { getCurrentUser } from "@/lib/auth";
 import type { Signal, BotState, BalanceInfo, WSEvent } from "@/lib/types";
 
 interface TradingContextType {
@@ -82,9 +84,28 @@ function reducer(state: BotState, action: Action): BotState {
 const TradingContext = createContext<TradingContextType | null>(null);
 
 export function TradingProvider({ children }: { children: React.ReactNode }) {
+  const { isAuthenticated, userId } = useAuth();
   const [state, dispatch] = useReducer(reducer, initialState);
   const [balance, setBalance] = React.useState<BalanceInfo>(initialBalance);
   const [latestTheme, setLatestTheme] = React.useState<"profit" | "loss" | "neutral">("neutral");
+
+  // Override balance & leverage dari user data kalau login
+  useEffect(() => {
+    if (isAuthenticated && userId) {
+      const user = getCurrentUser();
+      if (user) {
+        setBalance({
+          balance: user.balance,
+          initial_balance: user.initialBalance,
+          leverage: user.leverage,
+          entry_usdt: user.margin,
+        });
+      }
+    } else {
+      // Reset ke global default
+      setBalance(initialBalance);
+    }
+  }, [isAuthenticated, userId]);
 
   // WebSocket connection
   useEffect(() => {
@@ -149,23 +170,28 @@ export function TradingProvider({ children }: { children: React.ReactNode }) {
       }
     };
 
-    // Initial REST fetch
-    fetch("/api/bot/state")
-      .then((r) => r.json())
-      .then((data) => dispatch({ type: "SET_STATE", payload: data }))
-      .catch(() => {});
-
-    fetch("/api/trading/balance")
-      .then((r) => r.json())
-      .then((data) => setBalance(data.data))
-      .catch(() => {});
-
     connect();
     return () => {
       clearTimeout(reconnectTimer);
       ws?.close();
     };
   }, []);
+
+  // Initial REST fetch — tambah query user kalau login
+  useEffect(() => {
+    const user = isAuthenticated ? getCurrentUser() : null;
+    const userParam = user ? `?user=${user.id}` : "";
+
+    fetch(`/api/bot/state${userParam}`)
+      .then((r) => r.json())
+      .then((data) => dispatch({ type: "SET_STATE", payload: data }))
+      .catch(() => {});
+
+    fetch(`/api/trading/balance${userParam}`)
+      .then((r) => r.json())
+      .then((data) => setBalance(data.data))
+      .catch(() => {});
+  }, [isAuthenticated]);
 
   // Update DOM theme attribute for global CSS variables
   useEffect(() => {
