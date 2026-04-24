@@ -23,12 +23,21 @@ export default function Home() {
   const [loaded, setLoaded] = useState(false);
   const [showPreloader, setShowPreloader] = useState(false);
 
-  // Cek sessionStorage saat mount — skip preloader kalau sudah pernah load
+  // Cek sessionStorage & referrer saat mount — skip preloader kalau sudah pernah load
+  // atau kalau user navigasi internal dari halaman lain (history/signals)
   useEffect(() => {
-    const alreadyLoaded = typeof window !== "undefined" && sessionStorage.getItem(PRELOADER_KEY);
-    if (alreadyLoaded) {
+    if (typeof window === "undefined") return;
+
+    const alreadyLoaded = sessionStorage.getItem(PRELOADER_KEY);
+    const isInternalNav = document.referrer && document.referrer.includes(window.location.origin);
+
+    if (alreadyLoaded || isInternalNav) {
       setLoaded(true);
       setShowPreloader(false);
+      // Tetap set flag biar refresh berikutnya juga skip
+      if (!alreadyLoaded) {
+        sessionStorage.setItem(PRELOADER_KEY, "true");
+      }
     } else {
       setShowPreloader(true);
     }
@@ -72,5 +81,7 @@ export default function Home() {
           <div className="story-section"><HistorySection /></div>
           <div className="story-section"><PnLShowcaseSection /></div>
         </div>
-
-       
+      </main>
+    </>
+  );
+}
