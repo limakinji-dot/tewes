@@ -4,11 +4,17 @@ import { useRef, useState, useCallback } from "react";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { useGSAP } from "@gsap/react";
-import AuroraBackground from "@/components/background/AuroraBackground";
-import QuantumCore from "@/components/background/QuantumCore";
+
+// ── Background & Core: trading-themed, NOT orbs ──────────────────────────────
+import TradingBackground from "@/components/background/TradingBackground";
+import ChartCore from "@/components/background/ChartCore";
+
+// ── UI ───────────────────────────────────────────────────────────────────────
 import LaTeXOverlay from "@/components/ui/LaTeXOverlay";
 import CustomCursor from "@/components/ui/CustomCursor";
 import Preloader from "@/components/ui/Preloader";
+
+// ── Sections ─────────────────────────────────────────────────────────────────
 import HeroSection from "@/sections/HeroSection";
 import LiveLogicSection from "@/sections/LiveLogicSection";
 import HistorySection from "@/sections/HistorySection";
@@ -25,20 +31,23 @@ export default function Home() {
     setLoaded(true);
   }, []);
 
-  useGSAP(() => {
-    if (!containerRef.current || !loaded) return;
-    const sections = gsap.utils.toArray<HTMLElement>(".story-section");
+  useGSAP(
+    () => {
+      if (!containerRef.current || !loaded) return;
+      const sections = gsap.utils.toArray<HTMLElement>(".story-section");
 
-    sections.forEach((sec, i) => {
-      ScrollTrigger.create({
-        trigger: sec,
-        start: "top center",
-        end: "bottom center",
-        onEnter: () => setSection(i),
-        onEnterBack: () => setSection(i),
+      sections.forEach((sec, i) => {
+        ScrollTrigger.create({
+          trigger: sec,
+          start: "top center",
+          end: "bottom center",
+          onEnter: () => setSection(i),
+          onEnterBack: () => setSection(i),
+        });
       });
-    });
-  }, { scope: containerRef, dependencies: [loaded] });
+    },
+    { scope: containerRef, dependencies: [loaded] }
+  );
 
   return (
     <>
@@ -46,18 +55,32 @@ export default function Home() {
       {!loaded && <Preloader onComplete={handlePreloaderComplete} />}
 
       <main ref={containerRef} className="relative bg-[#030303]">
-        <AuroraBackground />
-        <QuantumCore section={section} />
+        {/* Full-screen scrolling candlestick chart background */}
+        <TradingBackground />
+
+        {/* Central section-aware trading visualization */}
+        <ChartCore section={section} />
+
+        {/* LaTeX formula overlays */}
         <LaTeXOverlay />
 
+        {/* Page sections */}
         <div className="relative z-10">
-          <div className="story-section"><HeroSection /></div>
-          <div className="story-section"><LiveLogicSection /></div>
-          <div className="story-section"><HistorySection /></div>
-          <div className="story-section"><PnLShowcaseSection /></div>
+          <div className="story-section">
+            <HeroSection />
+          </div>
+          <div className="story-section">
+            <LiveLogicSection />
+          </div>
+          <div className="story-section">
+            <HistorySection />
+          </div>
+          <div className="story-section">
+            <PnLShowcaseSection />
+          </div>
         </div>
 
-        {/* Section indicator */}
+        {/* Section progress indicator — vertical lines, right edge */}
         <div className="fixed right-6 top-1/2 -translate-y-1/2 z-30 hidden lg:flex flex-col gap-3">
           {[0, 1, 2, 3].map((i) => (
             <div
@@ -66,9 +89,10 @@ export default function Home() {
               style={{
                 width: section === i ? "2px" : "1.5px",
                 height: section === i ? "40px" : "24px",
-                background: section === i
-                  ? "rgba(212,168,71,0.7)"
-                  : "rgba(255,255,255,0.12)",
+                background:
+                  section === i
+                    ? "rgba(212,168,71,0.7)"
+                    : "rgba(255,255,255,0.12)",
               }}
             />
           ))}
